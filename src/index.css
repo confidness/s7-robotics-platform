@@ -1,0 +1,402 @@
+@import 'tailwindcss';
+
+/* Manual switch, not the OS query: the toggle writes data-theme on <html>. */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+/*
+  Liquid Glass design system.
+
+  Three rules the whole surface follows:
+  1. Glass is chrome, never content. Navigation and controls float and refract; text and data
+     sit on a fill opaque enough to read against anything behind it.
+  2. Corners are concentric. A 26px card holds 18px rows holding 12px controls, so the curves
+     stay parallel instead of fighting.
+  3. One saturated element per screen — the primary action. Everything else is glass, ink or air.
+*/
+
+@theme {
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* Porcelain canvas — the light the glass bends. */
+  --color-canvas: #eaeff8;
+
+  --color-ink-50: #f5f8fc;
+  --color-ink-100: #eaf0f8;
+  --color-ink-200: #dde5f0;
+  --color-ink-300: #c3cfdf;
+  --color-ink-400: #8e9cb0;
+  --color-ink-500: #596579;
+  --color-ink-600: #4a5568;
+  --color-ink-700: #333d4e;
+  --color-ink-800: #1d2635;
+  --color-ink-900: #0f1724;
+  --color-ink-950: #0a0f19;
+
+  /* System blue, warmed a touch so it sits well on porcelain. */
+  --color-brand-50: #eff5ff;
+  --color-brand-100: #dbe8ff;
+  --color-brand-200: #bed7ff;
+  --color-brand-300: #93bcff;
+  --color-brand-400: #619bff;
+  --color-brand-500: #3b7bff;
+  --color-brand-600: #2b62db;
+  --color-brand-700: #2557cc;
+  --color-brand-800: #1f47a5;
+
+  /* Amber and emerald text sit on pale glass, so 600 is darkened past Tailwind's
+     defaults (2.8:1 and 3.8:1 on that surface) to clear AA. */
+  --color-amber-600: #92400e;
+  --color-emerald-600: #047857;
+
+  /* Indigo companion — the second stop in every accent gradient. */
+  --color-accent-400: #a78bfa;
+  --color-accent-500: #8b5cf6;
+  --color-accent-600: #7c3aed;
+
+  /* Concentric radii. */
+  --radius-glass: 26px;
+  --radius-inner: 18px;
+  --radius-control: 14px;
+
+  /* The material, as variables. Light values live here; the dark block below swaps them. */
+  --glass-card: linear-gradient(152deg, rgb(255 255 255 / 0.74), rgb(255 255 255 / 0.58));
+  --glass-chrome: linear-gradient(160deg, rgb(255 255 255 / 0.7), rgb(255 255 255 / 0.48));
+  --glass-dim: linear-gradient(150deg, rgb(255 255 255 / 0.5), rgb(255 255 255 / 0.24));
+  --glass-border: rgb(255 255 255 / 0.75);
+  --glass-rim: linear-gradient(125deg, rgb(255 255 255 / 0.95) 0%, rgb(255 255 255 / 0.15) 28%, rgb(255 255 255 / 0.05) 62%, rgb(255 255 255 / 0.75) 100%);
+  --fill-strong: rgb(255 255 255 / 0.82);
+  --fill: rgb(255 255 255 / 0.68);
+  --fill-soft: rgb(255 255 255 / 0.5);
+  --edge: rgb(255 255 255 / 0.7);
+  --divider: rgb(255 255 255 / 0.6);
+  --tint-blue: linear-gradient(152deg, rgb(190 215 255 / 0.92), rgb(255 255 255 / 0.5));
+  --tint-violet: linear-gradient(152deg, rgb(216 203 255 / 0.9), rgb(255 255 255 / 0.5));
+  --tint-mint: linear-gradient(152deg, rgb(186 242 220 / 0.9), rgb(255 255 255 / 0.5));
+  --aurora-1: rgb(96 158 255 / 0.78);
+  --aurora-2: rgb(160 124 255 / 0.66);
+  --aurora-3: rgb(94 222 189 / 0.6);
+  --aurora-4: rgb(255 184 138 / 0.42);
+
+  /* Code keeps its own dark palette in both themes — an editor is always a dark instrument. */
+  --code-bg: #0b1120;
+  --code-fg: #e2e8f0;
+  --code-muted: #94a3b8;
+  --code-line: #5b6880;
+  --code-edge: rgb(255 255 255 / 0.1);
+
+  /* Two shadow recipes only: one for floating chrome, one for resting content. */
+  --shadow-soft: 0 1px 2px rgb(11 18 32 / 0.04), 0 10px 30px -18px rgb(11 18 32 / 0.28);
+  --shadow-lift: 0 2px 6px rgb(11 18 32 / 0.06), 0 26px 50px -24px rgb(11 18 32 / 0.34);
+  --shadow-float: 0 1px 0 0 rgb(255 255 255 / 0.85) inset, 0 20px 45px -22px rgb(11 18 32 / 0.4);
+}
+
+/* Dark is the same material over a dark room: the ink ramp inverts, the glass thins out. */
+[data-theme='dark'] {
+  --color-canvas: #070b14;
+
+  --color-ink-50: #141b26;
+  --color-ink-100: #1b2330;
+  --color-ink-200: #2a3444;
+  --color-ink-300: #3d4859;
+  --color-ink-400: #6b7a90;
+  --color-ink-500: #94a2b8;
+  --color-ink-600: #b3c0d2;
+  --color-ink-700: #cdd8e6;
+  --color-ink-800: #e2e9f3;
+  --color-ink-900: #f3f7fc;
+
+  --color-brand-50: #10203c;
+  --color-brand-100: #172c50;
+  --color-brand-200: #1f3d6e;
+  --color-brand-700: #9cc0ff;
+  --color-brand-800: #c2d8ff;
+
+  --glass-card: linear-gradient(152deg, rgb(255 255 255 / 0.1), rgb(255 255 255 / 0.05));
+  --glass-chrome: linear-gradient(160deg, rgb(255 255 255 / 0.11), rgb(255 255 255 / 0.05));
+  --glass-dim: linear-gradient(150deg, rgb(255 255 255 / 0.09), rgb(255 255 255 / 0.04));
+  --glass-border: rgb(255 255 255 / 0.14);
+  --glass-rim: linear-gradient(125deg, rgb(255 255 255 / 0.55) 0%, rgb(255 255 255 / 0.06) 30%, rgb(255 255 255 / 0.03) 64%, rgb(255 255 255 / 0.35) 100%);
+  --fill-strong: rgb(255 255 255 / 0.14);
+  --fill: rgb(255 255 255 / 0.09);
+  --fill-soft: rgb(255 255 255 / 0.055);
+  --edge: rgb(255 255 255 / 0.13);
+  --divider: rgb(255 255 255 / 0.09);
+  --tint-blue: linear-gradient(152deg, rgb(56 104 190 / 0.5), rgb(255 255 255 / 0.05));
+  --tint-violet: linear-gradient(152deg, rgb(112 84 200 / 0.48), rgb(255 255 255 / 0.05));
+  --tint-mint: linear-gradient(152deg, rgb(46 150 124 / 0.45), rgb(255 255 255 / 0.05));
+  --aurora-1: rgb(56 110 220 / 0.55);
+  --aurora-2: rgb(120 82 220 / 0.5);
+  --aurora-3: rgb(34 150 128 / 0.42);
+  --aurora-4: rgb(190 110 70 / 0.3);
+
+  /* Pale tints are surfaces, not colours: in the dark they become translucent washes, and the
+     deep shades that sit on them become light. One override retints every callout at once. */
+  --color-emerald-50: rgb(16 185 129 / 0.14);
+  --color-emerald-100: rgb(16 185 129 / 0.2);
+  --color-emerald-200: rgb(52 211 153 / 0.3);
+  --color-emerald-600: #34d399;
+  --color-emerald-700: #6ee7b7;
+  --color-emerald-800: #a7f3d0;
+  --color-emerald-900: #d1fae5;
+
+  --color-amber-50: rgb(245 158 11 / 0.14);
+  --color-amber-100: rgb(245 158 11 / 0.2);
+  --color-amber-200: rgb(251 191 36 / 0.32);
+  --color-amber-600: #fbbf24;
+  --color-amber-700: #fcd34d;
+  --color-amber-800: #fde68a;
+  --color-amber-900: #fef3c7;
+
+  --color-rose-50: rgb(244 63 94 / 0.14);
+  --color-rose-100: rgb(244 63 94 / 0.2);
+  --color-rose-200: rgb(251 113 133 / 0.3);
+  --color-rose-700: #fda4af;
+  --color-rose-800: #fecdd3;
+  --color-rose-900: #ffe4e6;
+
+  --color-violet-50: rgb(139 92 246 / 0.14);
+  --color-violet-100: rgb(139 92 246 / 0.2);
+  --color-violet-200: rgb(167 139 250 / 0.3);
+  --color-violet-700: #c4b5fd;
+  --color-violet-800: #ddd6fe;
+  --color-violet-900: #ede9fe;
+
+  --color-cyan-50: rgb(6 182 212 / 0.14);
+  --color-cyan-100: rgb(6 182 212 / 0.2);
+  --color-cyan-200: rgb(34 211 238 / 0.3);
+  --color-cyan-700: #67e8f9;
+  --color-cyan-800: #a5f3fc;
+
+  --shadow-soft: 0 1px 2px rgb(0 0 0 / 0.3), 0 12px 32px -18px rgb(0 0 0 / 0.75);
+  --shadow-lift: 0 2px 8px rgb(0 0 0 / 0.35), 0 28px 54px -24px rgb(0 0 0 / 0.85);
+  --shadow-float: 0 1px 0 0 rgb(255 255 255 / 0.12) inset, 0 22px 48px -22px rgb(0 0 0 / 0.8);
+}
+
+/* Utility-level exception: the CTA gradient keeps brand-600, text does not. */
+[data-theme='dark'] .text-brand-600 {
+  color: var(--color-brand-300);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    color-scheme: light;
+  }
+
+  html[data-theme='dark'] {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply text-ink-900 font-sans antialiased;
+    margin: 0;
+    background-color: var(--color-canvas);
+    /* Three fixed light sources. Without something behind it, glass is just a grey box. */
+    background-image:
+      radial-gradient(48rem 34rem at 4% -4%, var(--aurora-1), transparent 62%),
+      radial-gradient(44rem 34rem at 99% 2%, var(--aurora-2), transparent 64%),
+      radial-gradient(40rem 30rem at 72% 96%, var(--aurora-3), transparent 62%),
+      radial-gradient(38rem 30rem at 18% 88%, var(--aurora-4), transparent 62%);
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(11 18 32 / 0.18) transparent;
+  }
+
+  :focus-visible {
+    outline: 2.5px solid var(--color-brand-500);
+    outline-offset: 2px;
+    border-radius: 10px;
+  }
+
+  ::selection {
+    background: var(--color-brand-200);
+  }
+
+  /* Grid children default to min-width:auto, so one long unbreakable string widens the whole
+     track and the page scrolls sideways on a phone. :where() keeps specificity at 0. */
+  :where(.grid) > * {
+    min-width: 0;
+  }
+}
+
+@layer components {
+  /* ---------------------------------------------------------------- the material */
+
+  /* Content surface: opaque enough to read on, still lets the aurora through.
+     `.glass` is the same material under an older name, kept for the concept page. */
+  .card,
+  .glass {
+    background: var(--glass-card);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-glass);
+    box-shadow:
+      0 1px 0 0 rgb(255 255 255 / 0.9) inset,
+      var(--shadow-soft);
+  }
+
+  /* Floating chrome: thinner fill, deeper blur, sits above scrolling content. */
+  .chrome {
+    background: var(--glass-chrome);
+    backdrop-filter: blur(28px) saturate(190%);
+    -webkit-backdrop-filter: blur(28px) saturate(190%);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-float);
+  }
+
+  /* Recessed well inside a card — rows, wells, code frames. */
+  .inset {
+    background: var(--fill-soft);
+    border: 1px solid var(--edge);
+    box-shadow: 0 1px 2px rgb(11 18 32 / 0.04) inset;
+  }
+
+  .glass-dim {
+    background: var(--glass-dim);
+    backdrop-filter: blur(18px) saturate(165%);
+    -webkit-backdrop-filter: blur(18px) saturate(165%);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 1px 0 0 rgb(255 255 255 / 0.75) inset;
+  }
+
+  /* The lensing streak along a panel's lit edge. Decoration only — never over text. */
+  .specular {
+    position: relative;
+  }
+  /* A rim, not a wash: masked to a 1.5px edge so it can never sit over content. */
+  .specular::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    padding: 1.5px;
+    background: var(--glass-rim);
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask-composite: exclude;
+  }
+
+  .glow-cta {
+    box-shadow:
+      0 10px 28px -8px rgb(47 107 240 / 0.6),
+      0 1px 0 0 rgb(255 255 255 / 0.5) inset;
+  }
+
+  .card-hover {
+    @apply transition-[transform,box-shadow] duration-300;
+  }
+  .card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 1px 0 0 rgb(255 255 255 / 0.9) inset,
+      var(--shadow-lift);
+  }
+
+  /* Tinted glass — accent surfaces that still read as the same material. */
+  .tint-blue {
+    background: var(--tint-blue);
+  }
+  .tint-violet {
+    background: var(--tint-violet);
+  }
+  .tint-mint {
+    background: var(--tint-mint);
+  }
+
+  /* ---------------------------------------------------------------- semantic fills
+     Components ask for a role (a chip, a well, an edge), not a literal white. */
+  .fill-strong {
+    background-color: var(--fill-strong);
+  }
+  .fill {
+    background-color: var(--fill);
+  }
+  .fill-soft {
+    background-color: var(--fill-soft);
+  }
+  .rim {
+    --tw-ring-color: var(--edge);
+  }
+  .edge {
+    border-color: var(--edge);
+  }
+  .divider > * + * {
+    border-color: var(--divider);
+  }
+
+  /* Code surfaces stay dark in both themes. */
+  .code-surface {
+    background: var(--code-bg);
+    color: var(--code-fg);
+  }
+  .code-chrome {
+    color: var(--code-muted);
+    border-color: var(--code-edge);
+  }
+  .code-gutter {
+    background: var(--code-bg);
+    color: var(--code-line);
+  }
+
+  .surface-grid {
+    background-image:
+      linear-gradient(to right, rgb(255 255 255 / 0.22) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(255 255 255 / 0.22) 1px, transparent 1px);
+    background-size: 30px 30px;
+  }
+
+  .skeleton {
+    @apply animate-pulse rounded-2xl;
+    background: var(--fill);
+  }
+}
+
+/* Entrance for a whole screen, once. Individual cards do not animate in. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.animate-rise {
+  animation: rise 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.animate-toast {
+  animation: toast-in 0.26s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

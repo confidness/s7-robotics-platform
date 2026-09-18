@@ -1,0 +1,16 @@
+node_modules
+dist
+dist-ssr
+.vercel
+
+# local env files — VITE_MENTOR_PIN lives here, never in the repo
+.env
+.env.*
+!.env.example
+
+*.local
+*.tsbuildinfo
+.DS_Store
+.idea
+.vscode/*
+!.vscode/extensions.json
