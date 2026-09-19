@@ -73,12 +73,15 @@ async function liveTest(): Promise<string> {
     })
     const body = await res.text()
     if (!body.trim().startsWith('{')) return t('the_function_is_not_deployed_check_api_routes')
-    const data = JSON.parse(body) as { text?: string; error?: string; status?: number }
+    const data = JSON.parse(body) as { text?: string; error?: string; status?: number; detail?: string }
     if (res.ok && data.text) return t('live_ok', { text: data.text.slice(0, 90) })
     if (res.status === 501) return t('set_key_in_vercel_then_redeploy', { key: 'ANTHROPIC_API_KEY' })
+    // A 400 covers both an empty wallet and a malformed request, so the message decides, not the code.
+    if (/credit balance/i.test(data.detail ?? '')) return t('live_no_credit')
     if (data.status === 401 || data.status === 403) return t('live_key_rejected')
     if (data.status === 429) return t('live_rate_limited')
-    return t('live_failed', { code: String(data.status ?? data.error ?? res.status) })
+    const code = String(data.status ?? data.error ?? res.status)
+    return data.detail ? t('live_failed_detail', { code, detail: data.detail }) : t('live_failed', { code })
   } catch {
     return t('could_not_reach_it_at_all')
   }

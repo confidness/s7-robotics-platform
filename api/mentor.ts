@@ -110,7 +110,9 @@ export default async function handler(req: Request): Promise<Response> {
 
     if (!upstream.ok) {
       // Rate limit, bad key, upstream outage — all the same to the student: use the local base.
-      return json({ error: 'upstream', status: upstream.status }, 502)
+      // The reason is carried anyway, because the alternative is guessing at a status code from
+      // the outside. It is an API error string and never contains the key.
+      return json({ error: 'upstream', status: upstream.status, detail: await errorMessage(upstream) }, 502)
     }
 
     const data = (await upstream.json()) as { content?: { type: string; text?: string }[] }
@@ -123,6 +125,23 @@ export default async function handler(req: Request): Promise<Response> {
     return json(parsed, 200)
   } catch {
     return json({ error: 'upstream' }, 502)
+  }
+}
+
+/**
+ * Pulls Anthropic's own explanation out of a failed response.
+ *
+ * A bare status is not enough to act on: 400 alone covers a malformed request and an account with
+ * no credit left, and those need opposite fixes. Reading the body costs nothing at this point,
+ * since the response is being discarded either way.
+ */
+async function errorMessage(res: Response): Promise<string> {
+  try {
+    const body = (await res.json()) as { error?: { message?: unknown } }
+    const msg = body?.error?.message
+    return typeof msg === 'string' ? msg.slice(0, 300) : ''
+  } catch {
+    return ''
   }
 }
 

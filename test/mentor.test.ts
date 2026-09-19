@@ -122,6 +122,14 @@ async function run() {
   res = await post(ASK)
   check('bad key is 502, not 200', res.status === 502, res.status)
 
+  // A bare status cannot separate an empty wallet from a malformed request; the message can.
+  stubAnthropic({ status: 400, raw: { error: { message: 'Your credit balance is too low to access the Anthropic API.' } } })
+  res = await post(ASK)
+  out = (await res.json()) as Record<string, unknown>
+  check('upstream status is reported', out.status === 400, out)
+  check('upstream reason is carried through', String(out.detail).includes('credit balance'), out)
+  check('the reason never carries the key', !JSON.stringify(out).includes('test-key-not-a-real-one'), out)
+
   stubAnthropic({ status: 429 })
   check('rate limit is 502', (await post(ASK)).status === 502)
 
