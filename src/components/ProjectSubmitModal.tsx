@@ -127,7 +127,7 @@ export default function ProjectSubmitModal({
         <div className="grid gap-3 sm:grid-cols-2">
           {[
             { kind: 'image' as const, ref: imageInput, icon: ImagePlus, label: t('photos'), hint: t('wiring_build_bench_test'), accept: 'image/*' },
-            { kind: 'video' as const, ref: videoInput, icon: Film, label: 'Video', hint: 'A short clip of it running', accept: 'video/*' },
+            { kind: 'video' as const, ref: videoInput, icon: Film, label: t('video'), hint: t('a_short_clip_of_it_running'), accept: 'video/*' },
           ].map((slot) => (
             <div key={slot.kind}>
               <input ref={slot.ref} type="file" accept={slot.accept} multiple={slot.kind === 'image'} className="sr-only" onChange={(e) => addFiles(e.target.files, slot.kind)} aria-label={t('upload_files', { kind: slot.label })} />

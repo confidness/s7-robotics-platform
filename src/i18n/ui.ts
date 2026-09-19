@@ -1612,4 +1612,10 @@ export const UI: Record<string, { en: string; ru: string; kk: string }> = {
     ru: 'Ученики увидят её в своём профиле.',
     kk: 'Оқушылар оны профилінен көреді.',
   },
+  video: { en: 'Video', ru: 'Видео', kk: 'Бейне' },
+  a_short_clip_of_it_running: {
+    en: 'A short clip of it running',
+    ru: 'Короткое видео, как это работает',
+    kk: 'Қалай жұмыс істейтіні туралы қысқа бейне',
+  },
 }
