@@ -2,7 +2,7 @@
  * Pure state transitions. No React, no DOM — every rule of the product lives here
  * so the UI only has to render the result and the data layer can be swapped for an API.
  */
-import type { AppState, Attachment, Competition, CompetitionTask, CustomLesson, Feedback, LessonSubmission, Notification, Project, ProjectStatus, StudentProfile, TaskAnswer, Team, TextVars, User, XPTransaction } from './types'
+import type { AppState, Attachment, Competition, CompetitionTask, CustomLesson, Feedback, Group, LessonSubmission, Notification, Project, ProjectStatus, StudentProfile, TaskAnswer, Team, TextVars, User, XPTransaction } from './types'
 import { MAX_TASKS_PER_LESSON } from './types'
 import { evaluateAchievements } from './gamification'
 import { courseLessonOrder } from './curriculum'
@@ -254,8 +254,6 @@ export function registerUser(s: AppState, input: { name: string; email: string; 
     }
     next = { ...next, profiles: [...next.profiles, profile] }
     next = notify(next, { userId: user.id, title: 'notif_welcome', body: 'notif_welcome_body', kind: 'system', href: '/courses/arduino' })
-  } else {
-    next = { ...next, groups: next.groups.map((g) => g) }
   }
 
   return { state: next, user }
@@ -527,4 +525,21 @@ export function deleteTeam(s: AppState, teamId: string): AppState {
     // Tasks the team had claimed go back on the board rather than vanishing with it.
     competitionTasks: s.competitionTasks.map((t) => (t.teamId === teamId ? { ...t, teamId: undefined, status: 'open' } : t)),
   }
+}
+
+/* ---------------------------------------------------------------- groups */
+
+/**
+ * Groups are the mentor's timetable: a named class with a room, a slot and a roster.
+ * A student sits in one group at a time, so adding them here removes them from any other.
+ */
+export function saveGroup(s: AppState, group: Group): AppState {
+  const exists = s.groups.some((g) => g.id === group.id)
+  const cleaned = s.groups.map((g) => (g.id === group.id ? g : { ...g, studentIds: g.studentIds.filter((id) => !group.studentIds.includes(id)) }))
+  return { ...s, groups: exists ? cleaned.map((g) => (g.id === group.id ? group : g)) : [...cleaned, group] }
+}
+
+/** Removing a group never removes its students — they stay in the academy, just ungrouped. */
+export function deleteGroup(s: AppState, groupId: string): AppState {
+  return { ...s, groups: s.groups.filter((g) => g.id !== groupId) }
 }

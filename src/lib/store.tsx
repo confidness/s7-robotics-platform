@@ -5,7 +5,7 @@ import { COURSES, LESSONS, MODULES } from './curriculum'
 import { ACHIEVEMENTS } from './gamification'
 import * as logic from './logic'
 import type { ProjectDraft } from './logic'
-import type { Competition, CompetitionTask, CustomLesson, TaskAnswer, Team } from './types'
+import type { Competition, CompetitionTask, CustomLesson, Group, TaskAnswer, Team } from './types'
 import { profileOf } from './selectors'
 import { t as translate, useLocale } from '../i18n'
 import { localizeAchievement, localizeCourse, localizeLesson, localizeModule } from '../i18n/content'
@@ -79,6 +79,8 @@ interface Ctx {
   announceCompetition: (competitionId: string) => void
   saveCompetitionTask: (task: CompetitionTask) => void
   deleteCompetitionTask: (taskId: string) => void
+  saveGroup: (group: Group) => void
+  deleteGroup: (groupId: string) => void
   saveTeam: (team: Team) => void
   deleteTeam: (teamId: string) => void
   resetDemo: () => void
@@ -179,6 +181,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       announceCompetition: (competitionId) => setState((s) => logic.announceCompetition(s, competitionId)),
       saveCompetitionTask: (task) => setState((s) => logic.saveCompetitionTask(s, task)),
       deleteCompetitionTask: (taskId) => setState((s) => logic.deleteCompetitionTask(s, taskId)),
+      saveGroup: (group) => setState((s) => logic.saveGroup(s, group)),
+      deleteGroup: (groupId) => setState((s) => logic.deleteGroup(s, groupId)),
       saveTeam: (team) => setState((s) => logic.saveTeam(s, team)),
       deleteTeam: (teamId) => setState((s) => logic.deleteTeam(s, teamId)),
       resetDemo() {

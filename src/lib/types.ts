@@ -20,7 +20,6 @@ export interface User {
   password: string
   role: Role
   avatar: string
-  groupId?: string
   title?: string
   joinedAt: string
   bio?: string
@@ -181,6 +180,7 @@ export interface XPTransaction {
   refId?: string
 }
 
+/** A scheduled class a mentor runs. The roster lives here, not on the user. */
 export interface Group {
   id: string
   name: string

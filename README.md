@@ -63,6 +63,13 @@ Multiple-choice questions mark themselves, so a lesson made only of them settles
 is handed in and pays out on the spot. Anything written by hand cannot be marked by a machine,
 so it goes to the mentor and travels the same review loop projects do.
 
+## Groups
+
+A mentor's timetable: a named class with a room, a slot, a course and a roster drawn from the
+registered students. A student sits in one group at a time, so adding them to a second removes
+them from the first. Deleting a group never removes its students — they stay in the academy,
+just ungrouped, and the mentor's roster still shows everyone.
+
 ## Competitions
 
 Nothing is seeded. A mentor announces an event from inside the app — name, place, start and end
