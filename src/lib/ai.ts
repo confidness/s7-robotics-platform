@@ -40,7 +40,87 @@ interface Entry {
   code?: { language: string; source: string }
 }
 
-const KB: Entry[] = [
+export const KB: Entry[] = [
+  {
+    id: 'upload',
+    match: /\b(avrdude|upload(ing)?|com\d|port not|not responding|access is denied|ch340|stk500)\b|не видит плату|порт не|не прошива|жүктелмей|порт көрінбе/i,
+    en: {
+      text: 'An upload failure is not a code problem — the compiler already agreed to your code before this step even started. Something between the IDE and the board is in the way, and on Windows it is almost always one of three things.\n\n**Tools → Port** is empty or pointing at the wrong COM number. A clone board needs the CH340 driver installed before Windows will hand it a port at all. And a cable that came with a phone is often charge-only: it carries power, so the board lights up and looks fine, but no data can cross it.\n\nIf the port is there and the upload still fails, close the Serial Monitor. It holds the port open and the uploader cannot take it from you.',
+      question: 'Unplug the board and plug it back in — does the list under Tools → Port change at all?',
+      followUps: ['Nothing prints in Serial Monitor', 'Which board do I pick?', 'avrdude says not responding'],
+    },
+  },
+  {
+    id: 'analog',
+    match: /\b(analog ?read|potentiometer|map\(|adc|1023)\b|аналог|потенциометр|переменн\w* резистор|аналогтық|реттегіш/i,
+    en: {
+      text: '`analogRead` does not give you volts. It gives a number from 0 to 1023, because the converter splits the range between GND and 5 V into 1024 steps. A knob turned halfway reads about 512 — that is a position on a scale, not a measurement of anything yet.\n\n`map()` is proportion written out: take a value sitting in one range, return where it sits in another. It does **not** clamp. A reading outside the input range gives you an output outside the target range, cheerfully and without warning. `constrain()` is what stops that.',
+      caption: 'Raw reading to a percentage',
+      question: 'If your knob never quite reaches 0 or 1023 at the stops, which two numbers in that map() are wrong?',
+      followUps: ['Why does my reading drift?', 'How do I smooth a noisy reading?', 'Can I read several analog pins?'],
+    },
+    code: {
+      language: 'cpp',
+      source: `int raw = analogRead(A0);
+int percent = map(raw, 0, 1023, 0, 100);`,
+    },
+  },
+  {
+    id: 'dht11',
+    match: /\b(dht-?11|dht-?22|humidity|isnan)\b|влажност|датчик температур|ылғалдылық/i,
+    en: {
+      text: 'The DHT11 is slow and speaks over a single wire, which is why it ships with a library — the timing is far too tight to hand-roll. Two consequences follow, and both catch people out.\n\nIt needs roughly two seconds between reads. Ask it faster and you get the previous sample back, or nothing at all. And when a read fails it does not raise an error — it returns **NaN**. NaN is not a number, so every comparison against it is false, and your code sails past the check you thought you wrote and uses garbage.\n\nTest `isnan()` before the value reaches anything else. Always.',
+      caption: 'Reject a failed read before your logic sees it',
+      question: 'On a failed read, should your robot hold the last good value or stop? Which is safer for the thing you are building?',
+      followUps: ['Why is my humidity always identical?', 'How do I print two values on one line?'],
+    },
+    code: {
+      language: 'cpp',
+      source: `float t = dht.readTemperature();
+if (isnan(t)) return;   // a failed read, not a temperature`,
+    },
+  },
+  {
+    id: 'line-following',
+    match: /\b(line follow|follow(ing)? the line|proportional|p-?control|kp|zig-?zag|wobbl)\b|по линии|пропорционал|виля|сызық бойымен|пропорционалды/i,
+    en: {
+      text: 'If the robot only knows *on the line* or *off the line*, it can do exactly one thing: turn hard until the answer flips. That is the wobble, and no amount of tuning will remove it, because the information simply is not there.\n\nProportional control needs a number, not a yes or no. The error is how far off centre you are; the correction is that error multiplied by a constant. A small error nudges, a large error swings. One sensor gives you almost no error signal — two give you a real one.',
+      caption: 'Error in, correction out',
+      question: 'Too small a Kp and it drifts off the line, too large and it oscillates. Which of those two is yours doing right now?',
+      followUps: ['How do I pick Kp?', 'What if it loses the line entirely?', 'Why calibrate the sensors first?'],
+    },
+    code: {
+      language: 'cpp',
+      source: `int error = leftSensor - rightSensor;   // 0 means centred
+int correction = Kp * error;
+setMotors(baseSpeed + correction, baseSpeed - correction);`,
+    },
+  },
+  {
+    id: 'line-sensor',
+    match: /\b(ir sensor|infrared|line sensor|tcrt|reflectance|calibrat)\b|инфракрасн|датчик лини|калибров|инфрақызыл|калибрле/i,
+    en: {
+      text: 'An IR line sensor does not see black and white. It shines infrared downward and measures how much comes back — a dark surface absorbs, a light one reflects. What reaches your code is a reflectance number, and it shifts with the height of the sensor, the lighting in the room, and the paper itself.\n\nThat is exactly why a hardcoded threshold works on your desk and fails at the competition venue. Measure over white, measure over black, put the threshold between them — and do it at the start of every run, not once while writing the code.',
+      caption: 'A threshold measured, never guessed',
+      question: 'Suppose your two measurements come back close together, say 480 and 530. What does that tell you to fix before writing another line of code?',
+      followUps: ['How do I follow the line, not just see it?', 'Why do readings change near a window?'],
+    },
+    code: {
+      language: 'cpp',
+      source: `int white = analogRead(IR_PIN);   // hold it over the light surface
+int black = analogRead(IR_PIN);   // then over the line
+int threshold = (white + black) / 2;`,
+    },
+  },
+  {
+    id: 'board-repl',
+    match: /\b(esp-?32|pico|micro-?python|repl|thonny|ampy|web serial|boot\.py|main\.py)\b|есп32|пико|микропайтон|репл/i,
+    en: {
+      text: 'An ESP32 or a Pico running MicroPython is a different workflow from an Arduino, and expecting the Arduino one is where most of the confusion comes from. There is no compile-and-upload step: the board is running a Python interpreter, and you are talking to it live over the serial port.\n\nThat gives you a REPL — type a line, it runs immediately, you see the result. **Ctrl-C** interrupts a running program, which is how you take back control when a loop has swallowed the board. A file saved as `main.py` runs by itself at power-up.\n\nThe board terminal in this platform speaks Web Serial, so all of that works from the browser with nothing installed.',
+      question: 'Which board is it, and does it already have MicroPython on it, or is it still running whatever it shipped with?',
+      followUps: ['Ctrl-C does nothing', 'How do I save a program to the board?', 'Which baud rate?'],
+    },
+  },
   {
     id: 'ultrasonic',
     match: /\b(hc-?sr-?04|ultrasonic|distance sensor)\b|ультразвук|датчик расстояния|ультрадыбыс|қашықтық сенсор/i,

@@ -238,8 +238,62 @@ async function clientSide() {
   r = await askMentor('anything', {})
   check('empty model text falls back instead of showing blank', r.text.length > 0 && r.fromModel !== true, r)
 
+  await knowledgeBase()
+
   console.log(failures === 0 ? '✓ the model always wins; the offline base only fills a silence' : `${failures} failed`)
   if (failures) process.exitCode = 1
+}
+
+/**
+ * The offline base is what answers whenever the model cannot, so it is not a decoration.
+ *
+ * Two things rot quietly here. A new entry added above an older one can swallow its questions,
+ * because the first matching pattern wins and nothing complains. And an entry added to the English
+ * canonical without its Russian and Kazakh wording falls back to English silently — which on a
+ * trilingual platform is exactly the kind of bug a judge finds before anyone else does.
+ */
+async function knowledgeBase() {
+  const { KB } = (await import('../src/lib/ai.ts')) as unknown as { KB: { id: string; match: RegExp }[] }
+  const { AI_RU } = (await import('../src/i18n/ai.ru.ts')) as typeof import('../src/i18n/ai.ru.ts')
+  const { AI_KK } = (await import('../src/i18n/ai.kk.ts')) as typeof import('../src/i18n/ai.kk.ts')
+
+  for (const entry of KB) {
+    check(`${entry.id} has Russian wording`, entry.id in AI_RU, entry.id)
+    check(`${entry.id} has Kazakh wording`, entry.id in AI_KK, entry.id)
+  }
+  // 'fallback' and the '_plain' variants answer when there is no entry or no lesson, so they are
+  // packaged wording without a KB row of their own. Everything else must belong to one.
+  const known = (id: string) => KB.some((e) => e.id === id) || id === 'fallback' || id.endsWith('_plain')
+  for (const id of Object.keys(AI_RU)) check(`ru pack has no orphan: ${id}`, known(id), id)
+  for (const id of Object.keys(AI_KK)) check(`kk pack has no orphan: ${id}`, known(id), id)
+
+  // A question a student would really type, and the entry it has to reach — in all three languages.
+  const ROUTES: [string, string][] = [
+    ['avrdude: stk500_getsync() not responding', 'upload'],
+    ['плата не прошивается, порт не появляется', 'upload'],
+    ['тақша жүктелмейді', 'upload'],
+    ['what does analogRead return?', 'analog'],
+    ['как работает потенциометр', 'analog'],
+    ['my DHT11 humidity is wrong', 'dht11'],
+    ['датчик влажности врёт', 'dht11'],
+    ['my robot wobbles following the line', 'line-following'],
+    ['робот виляет по линии', 'line-following'],
+    ['how do I calibrate the infrared sensor', 'line-sensor'],
+    ['калибровка датчика линии', 'line-sensor'],
+    ['how do I use the REPL on a Pico', 'board-repl'],
+    ['esp32 micropython не отвечает', 'board-repl'],
+    // The entries these were inserted above must keep their own questions.
+    ['my HC-SR04 reads zero', 'ultrasonic'],
+    ['the motor driver does nothing', 'motor'],
+    ['error: was not declared in this scope', 'compile-error'],
+    ['write my whole project for me', 'do-my-homework'],
+  ]
+  for (const [question, expected] of ROUTES) {
+    const hit = KB.find((e) => e.match.test(question))
+    check(`"${question.slice(0, 34)}" reaches ${expected}`, hit?.id === expected, { got: hit?.id })
+  }
+
+  console.log(`  ${KB.length} knowledge base topics, all three languages`)
 }
 
 void run().then(clientSide)

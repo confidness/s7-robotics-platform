@@ -1676,7 +1676,7 @@ export const UI: Record<string, { en: string; ru: string; kk: string }> = {
   },
   clear_output: { en: 'Clear', ru: 'Очистить', kk: 'Тазалау' },
   answered_by_the_model: { en: 'Answered by the model', ru: 'Ответила модель', kk: 'Модель жауап берді' },
-  answered_offline: { en: 'Answered offline', ru: 'Ответ из офлайн-базы', kk: 'Офлайн базадан жауап' },
+  answered_offline: { en: 'From the knowledge base', ru: 'Из базы знаний', kk: 'Білім базасынан' },
   could_not_check_the_pin_try_again: {
     en: 'Could not check the PIN. Check your connection and try again.',
     ru: 'Не удалось проверить PIN. Проверь соединение и попробуй снова.',
