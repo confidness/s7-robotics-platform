@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import {
-  Award, BarChart3, Bell, BookOpen, Bot, CalendarClock, ChevronRight, ClipboardCheck, FolderKanban, GraduationCap, Images, LayoutDashboard, LogOut, Menu,
+  Award, BarChart3, Bell, BookOpen, Bot, CalendarClock, ChevronRight, ClipboardCheck, ClipboardList, FilePlus2, FolderKanban, GraduationCap, Images, LayoutDashboard, LogOut, Menu,
   Settings, Sparkles, Trophy, User as UserIcon, Users, X, Zap,
 } from 'lucide-react'
 import { useApp } from '../lib/store'
@@ -29,6 +29,7 @@ const STUDENT_NAV: NavItem[] = [
   { to: '/', label: 'dashboard', icon: LayoutDashboard, end: true, primary: true },
   { to: '/courses', label: 'courses', icon: BookOpen, primary: true },
   { to: '/learning', label: 'my_learning', icon: GraduationCap, primary: true, short: 'learning_short' },
+  { to: '/assigned', label: 'mentor_assignments', icon: ClipboardList },
   { to: '/projects', label: 'projects', icon: FolderKanban, primary: true },
   { to: '/achievements', label: 'achievements', icon: Award },
   { to: '/gallery', label: 'gallery', icon: Images },
@@ -43,6 +44,7 @@ const MENTOR_NAV: NavItem[] = [
   { to: '/m/groups', label: 'groups', icon: Users, primary: true },
   { to: '/m/students', label: 'students', icon: GraduationCap, primary: true, short: 'students' },
   { to: '/m/reviews', label: 'reviews', icon: ClipboardCheck, primary: true },
+  { to: '/m/lessons', label: 'my_lessons', icon: FilePlus2 },
   { to: '/m/projects', label: 'projects', icon: FolderKanban },
   { to: '/m/courses', label: 'courses', icon: BookOpen },
   { to: '/m/competition', label: 'competition', icon: Trophy },

@@ -61,6 +61,8 @@ export function createInitialState(): AppState {
     competitions: COMPETITIONS,
     competitionTasks: COMPETITION_TASKS,
     notifications: [],
+    customLessons: [],
+    lessonSubmissions: [],
     sessionUserId: null,
   }
 }

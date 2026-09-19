@@ -237,6 +237,69 @@ export interface Notification {
   href?: string
 }
 
+/* ---------------------------------------------------------------- mentor-authored lessons */
+
+/** A lesson a mentor writes, as opposed to the curriculum that ships in the code. */
+export type TaskKind = 'quiz' | 'code' | 'open'
+
+/** At most this many questions per lesson — the mentor decides how many below it. */
+export const MAX_TASKS_PER_LESSON = 10
+
+export interface LessonMaterial {
+  name: string
+  mime: string
+  size: number
+  /** data URL, the same local-first storage project attachments use */
+  url: string
+}
+
+export interface CustomTask {
+  id: string
+  kind: TaskKind
+  prompt: string
+  points: number
+  /** quiz only: the choices and which one is right */
+  options?: string[]
+  answerIndex?: number
+  /** code only: what the editor opens with */
+  starter?: string
+}
+
+export interface CustomLesson {
+  id: string
+  authorId: string
+  title: string
+  summary: string
+  material?: LessonMaterial
+  tasks: CustomTask[]
+  /** Students only ever see published lessons; a draft stays with its author. */
+  published: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface TaskAnswer {
+  taskId: string
+  /** quiz: the chosen index as a string. code and open: the text itself. */
+  value: string
+}
+
+export interface LessonSubmission {
+  id: string
+  lessonId: string
+  studentId: string
+  answers: TaskAnswer[]
+  /** Quiz questions mark themselves; this is the share answered correctly. */
+  quizScore: number
+  quizTotal: number
+  status: 'submitted' | 'reviewed'
+  submittedAt: string
+  reviewedAt?: string
+  reviewerId?: string
+  feedback?: string
+  awardedXp?: number
+}
+
 export interface AppState {
   users: User[]
   profiles: StudentProfile[]
@@ -251,5 +314,7 @@ export interface AppState {
   competitions: Competition[]
   competitionTasks: CompetitionTask[]
   notifications: Notification[]
+  customLessons: CustomLesson[]
+  lessonSubmissions: LessonSubmission[]
   sessionUserId: string | null
 }

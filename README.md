@@ -49,6 +49,20 @@ as a dictionary key plus the ids it refers to, never as a finished sentence. A n
 written in Kazakh therefore reads in Russian the moment the language changes, instead of being
 frozen in whatever language was active when it was written.
 
+## Mentor-authored lessons
+
+Beside the curriculum that ships in the code, a mentor can write their own: a PDF or Word file
+of material, and up to ten questions of three kinds — multiple choice, write code, or a written
+answer. The mentor sets how many and what each is worth.
+
+These live beside the shipped courses rather than inside them, so one mentor's material never
+renumbers another's course or disturbs the unlock chain. Students find them under **Mentor
+assignments**.
+
+Multiple-choice questions mark themselves, so a lesson made only of them settles the moment it
+is handed in and pays out on the spot. Anything written by hand cannot be marked by a machine,
+so it goes to the mentor and travels the same review loop projects do.
+
 ## Themes
 
 Light, dark, or follow the system — the switch sits in the header (and in the account menu on
@@ -67,7 +81,8 @@ a warning has to look like a warning — and never as decoration.
 src/
   lib/
     types.ts        every entity: User, Course, Module, Lesson, Project, Feedback,
-                    Achievement, XPTransaction, Group, Team, Competition, Notification
+                    Achievement, XPTransaction, Group, Team, Competition, Notification,
+                    CustomLesson, CustomTask, LessonSubmission
     curriculum.ts   5 courses, 12 modules, 18 lessons, hardware platform registry
     seed.ts         the content a fresh install ships with — courses and the season, no people
     logic.ts        ALL business rules as pure functions (state) => state

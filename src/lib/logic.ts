@@ -2,7 +2,8 @@
  * Pure state transitions. No React, no DOM — every rule of the product lives here
  * so the UI only has to render the result and the data layer can be swapped for an API.
  */
-import type { AppState, Attachment, Feedback, Notification, Project, ProjectStatus, StudentProfile, TextVars, User, XPTransaction } from './types'
+import type { AppState, Attachment, CustomLesson, Feedback, LessonSubmission, Notification, Project, ProjectStatus, StudentProfile, TaskAnswer, TextVars, User, XPTransaction } from './types'
+import { MAX_TASKS_PER_LESSON } from './types'
 import { evaluateAchievements } from './gamification'
 import { courseLessonOrder } from './curriculum'
 import { lessonById } from './selectors'
@@ -301,4 +302,141 @@ export function setTaskStatus(s: AppState, taskId: string, status: AppState['com
 
 export function readNotifications(s: AppState, userId: string, id?: string): AppState {
   return { ...s, notifications: s.notifications.map((n) => (n.userId === userId && (!id || n.id === id) ? { ...n, read: true } : n)) }
+}
+
+/* ---------------------------------------------------------------- mentor-authored lessons */
+
+/**
+ * Lessons a mentor writes live beside the curriculum rather than inside it: the shipped courses
+ * keep their fixed order and unlock chain, and these are assigned separately. That keeps one
+ * mentor's material from renumbering everyone else's course.
+ */
+export function saveCustomLesson(s: AppState, lesson: CustomLesson): AppState {
+  const exists = s.customLessons.some((l) => l.id === lesson.id)
+  const next = { ...lesson, tasks: lesson.tasks.slice(0, MAX_TASKS_PER_LESSON), updatedAt: now() }
+  return {
+    ...s,
+    customLessons: exists ? s.customLessons.map((l) => (l.id === lesson.id ? next : l)) : [next, ...s.customLessons],
+  }
+}
+
+export function deleteCustomLesson(s: AppState, lessonId: string): AppState {
+  return {
+    ...s,
+    customLessons: s.customLessons.filter((l) => l.id !== lessonId),
+    lessonSubmissions: s.lessonSubmissions.filter((sub) => sub.lessonId !== lessonId),
+  }
+}
+
+/** Publishing is what makes a lesson visible to students; unpublishing hides it again. */
+export function setLessonPublished(s: AppState, lessonId: string, published: boolean): AppState {
+  const lesson = s.customLessons.find((l) => l.id === lessonId)
+  if (!lesson) return s
+  let next: AppState = {
+    ...s,
+    customLessons: s.customLessons.map((l) => (l.id === lessonId ? { ...l, published, updatedAt: now() } : l)),
+  }
+  if (published) {
+    for (const student of next.users.filter((u) => u.role === 'student')) {
+      next = notify(next, {
+        userId: student.id,
+        title: 'notif_new_assignment',
+        body: 'notif_new_assignment_body',
+        vars: { title: lesson.title },
+        kind: 'unlock',
+        href: `/assigned/${lessonId}`,
+      })
+    }
+  }
+  return next
+}
+
+/** Quiz questions mark themselves. Anything written by hand needs a person to read it. */
+export function gradeQuiz(lesson: CustomLesson, answers: TaskAnswer[]): { score: number; total: number } {
+  const quizzes = lesson.tasks.filter((t) => t.kind === 'quiz')
+  const score = quizzes.reduce((n, task) => {
+    const given = answers.find((a) => a.taskId === task.id)?.value
+    return given !== undefined && Number(given) === task.answerIndex ? n + 1 : n
+  }, 0)
+  return { score, total: quizzes.length }
+}
+
+/**
+ * A lesson made only of quizzes can settle itself the moment it is handed in. One with code or
+ * written answers cannot, so it waits for the mentor — the same review loop projects use.
+ */
+export function submitLessonAnswers(s: AppState, studentId: string, lessonId: string, answers: TaskAnswer[]): AppState {
+  const lesson = s.customLessons.find((l) => l.id === lessonId)
+  if (!lesson || s.lessonSubmissions.some((sub) => sub.lessonId === lessonId && sub.studentId === studentId)) return s
+
+  const { score, total } = gradeQuiz(lesson, answers)
+  const selfMarking = lesson.tasks.length > 0 && lesson.tasks.every((t) => t.kind === 'quiz')
+  const points = lesson.tasks.reduce((n, t) => n + t.points, 0)
+
+  const submission: LessonSubmission = {
+    id: uid('ls'),
+    lessonId,
+    studentId,
+    answers,
+    quizScore: score,
+    quizTotal: total,
+    status: selfMarking ? 'reviewed' : 'submitted',
+    submittedAt: now(),
+    ...(selfMarking
+      ? { reviewedAt: now(), awardedXp: total ? Math.round((score / total) * points) : 0 }
+      : {}),
+  }
+
+  let next: AppState = { ...s, lessonSubmissions: [submission, ...s.lessonSubmissions] }
+
+  if (selfMarking) {
+    const earned = submission.awardedXp ?? 0
+    if (earned > 0) next = awardXp(next, studentId, earned, 'xp_assignment_completed', 'lesson', lessonId, { title: lesson.title })
+    next = notify(next, {
+      userId: studentId,
+      title: 'notif_assignment_marked',
+      body: 'notif_assignment_marked_body',
+      vars: { title: lesson.title, score, total, xp: earned },
+      kind: 'achievement',
+      href: `/assigned/${lessonId}`,
+    })
+  } else {
+    next = notify(next, {
+      userId: lesson.authorId,
+      title: 'notif_assignment_submitted',
+      body: 'notif_assignment_submitted_body',
+      vars: { student: next.users.find((u) => u.id === studentId)?.name ?? '', title: lesson.title },
+      kind: 'review',
+      href: `/m/lessons/${lessonId}`,
+    })
+  }
+
+  next = touchStreak(next, studentId)
+  return syncAchievements(next, studentId)
+}
+
+/** The mentor reads the written answers, sets the XP and closes the submission. */
+export function reviewLessonSubmission(s: AppState, submissionId: string, mentorId: string, feedback: string, awardedXp: number): AppState {
+  const submission = s.lessonSubmissions.find((sub) => sub.id === submissionId)
+  if (!submission || submission.status === 'reviewed') return s
+  const lesson = s.customLessons.find((l) => l.id === submission.lessonId)
+  const cap = lesson ? lesson.tasks.reduce((n, t) => n + t.points, 0) : awardedXp
+  const xp = Math.max(0, Math.min(Math.round(awardedXp), cap))
+
+  let next: AppState = {
+    ...s,
+    lessonSubmissions: s.lessonSubmissions.map((sub) =>
+      sub.id === submissionId ? { ...sub, status: 'reviewed', reviewedAt: now(), reviewerId: mentorId, feedback, awardedXp: xp } : sub,
+    ),
+  }
+  if (xp > 0) next = awardXp(next, submission.studentId, xp, 'xp_assignment_completed', 'lesson', submission.lessonId, { title: lesson?.title ?? '' })
+  next = notify(next, {
+    userId: submission.studentId,
+    title: 'notif_assignment_reviewed',
+    body: 'notif_assignment_reviewed_body',
+    vars: { title: lesson?.title ?? '', xp },
+    kind: 'approval',
+    href: `/assigned/${submission.lessonId}`,
+  })
+  return syncAchievements(next, submission.studentId)
 }

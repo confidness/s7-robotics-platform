@@ -110,4 +110,63 @@ assert.equal(levelFor(1200).level.name, 'Engineer')
 assert.equal(levelFor(99_999).level.name, 'Competition Engineer')
 assert.equal(levelFor(400).xpToNext, 600)
 
-console.log('✓ empty install, registration, progress chain, code check and levels all behave')
+// --- mentor-authored lessons ----------------------------------------------------------------------------
+const MAX = 10
+const overLong = {
+  id: 'cl-1',
+  authorId: mentor,
+  title: 'Soldering safety',
+  summary: 'How to hold the iron.',
+  tasks: Array.from({ length: MAX + 3 }, (_, i) => ({ id: `t${i}`, kind: 'open' as const, prompt: `Q${i}`, points: 5 })),
+  published: false,
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+}
+let ls = logic.saveCustomLesson(returned, overLong)
+assert.equal(ls.customLessons[0].tasks.length, MAX, 'a lesson is capped at ten questions')
+
+// A quiz-only lesson settles itself; anything hand-written waits for the mentor.
+const quizOnly = {
+  ...overLong,
+  id: 'cl-2',
+  published: true,
+  tasks: [
+    { id: 'q1', kind: 'quiz' as const, prompt: '180 or 320?', points: 10, options: ['180', '320'], answerIndex: 1 },
+    { id: 'q2', kind: 'quiz' as const, prompt: 'Flux?', points: 10, options: ['yes', 'no'], answerIndex: 0 },
+  ],
+}
+ls = logic.saveCustomLesson(ls, quizOnly)
+const xpBeforeQuiz = profileOf(ls, STUDENT)!.xp
+ls = logic.submitLessonAnswers(ls, STUDENT, 'cl-2', [
+  { taskId: 'q1', value: '1' },
+  { taskId: 'q2', value: '1' },
+])
+const auto = ls.lessonSubmissions.find((s) => s.lessonId === 'cl-2')!
+assert.equal(auto.status, 'reviewed', 'a quiz-only lesson marks itself')
+assert.equal(auto.quizScore, 1)
+assert.equal(auto.awardedXp, 10, 'half right pays half the points')
+assert.equal(profileOf(ls, STUDENT)!.xp, xpBeforeQuiz + 10)
+
+// The same lesson cannot be handed in twice.
+const twice = logic.submitLessonAnswers(ls, STUDENT, 'cl-2', [{ taskId: 'q1', value: '1' }])
+assert.equal(twice.lessonSubmissions.filter((s) => s.lessonId === 'cl-2').length, 1)
+
+// A written answer goes to the mentor, and the award is capped at the lesson's points.
+const mixed = { ...overLong, id: 'cl-3', published: true, tasks: [{ id: 'w1', kind: 'open' as const, prompt: 'Why?', points: 20 }] }
+ls = logic.saveCustomLesson(ls, mixed)
+ls = logic.submitLessonAnswers(ls, STUDENT, 'cl-3', [{ taskId: 'w1', value: 'Because of the fumes.' }])
+const waiting = ls.lessonSubmissions.find((s) => s.lessonId === 'cl-3')!
+assert.equal(waiting.status, 'submitted', 'written answers wait for a person')
+const xpBeforeReview = profileOf(ls, STUDENT)!.xp
+ls = logic.reviewLessonSubmission(ls, waiting.id, mentor, 'Good reasoning.', 999)
+const reviewed = ls.lessonSubmissions.find((s) => s.id === waiting.id)!
+assert.equal(reviewed.status, 'reviewed')
+assert.equal(reviewed.awardedXp, 20, 'the award cannot exceed what the lesson is worth')
+assert.equal(profileOf(ls, STUDENT)!.xp, xpBeforeReview + 20)
+
+// Deleting a lesson takes its submissions with it.
+ls = logic.deleteCustomLesson(ls, 'cl-3')
+assert.ok(!ls.customLessons.some((l) => l.id === 'cl-3'))
+assert.ok(!ls.lessonSubmissions.some((s) => s.lessonId === 'cl-3'), 'answers do not outlive their lesson')
+
+console.log('✓ empty install, registration, progress chain, code check, levels and mentor lessons all behave')

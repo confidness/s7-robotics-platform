@@ -4,6 +4,9 @@ import Layout from './components/Layout'
 import { useApp } from './lib/store'
 
 import Login from './pages/Login'
+import Assigned, { AssignedLesson } from './pages/student/Assigned'
+import MentorLessons, { LessonSubmissions } from './pages/mentor/MentorLessons'
+import LessonBuilder from './pages/mentor/LessonBuilder'
 import NotFound from './pages/NotFound'
 
 import Dashboard from './pages/student/Dashboard'
@@ -64,6 +67,8 @@ export default function App() {
         <Route path="/competition" element={<Competition />} />
         <Route path="/ai" element={<AIMentor />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/assigned" element={<Assigned />} />
+        <Route path="/assigned/:lessonId" element={<AssignedLesson />} />
         <Route path="/settings" element={<StudentSettings />} />
       </Route>
 
@@ -85,6 +90,10 @@ export default function App() {
         <Route path="courses" element={<MentorCourses />} />
         <Route path="competition" element={<MentorCompetition />} />
         <Route path="analytics" element={<MentorAnalytics />} />
+        <Route path="lessons" element={<MentorLessons />} />
+        <Route path="lessons/new" element={<LessonBuilder />} />
+        <Route path="lessons/:lessonId" element={<LessonSubmissions />} />
+        <Route path="lessons/:lessonId/edit" element={<LessonBuilder />} />
         <Route path="settings" element={<MentorSettings />} />
       </Route>
 

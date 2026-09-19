@@ -142,3 +142,26 @@ export function resolveVars(s: AppState, vars?: TextVars): TextVars | undefined 
   if (!out.student) out.student = t('a_student')
   return out
 }
+
+/* ---------------------------------------------------------------- mentor-authored lessons */
+
+/** What a student is allowed to see: published only, newest first. */
+export const assignedLessons = (s: AppState) =>
+  s.customLessons.filter((l) => l.published).sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+
+export const customLessonById = (s: AppState, id?: string) => s.customLessons.find((l) => l.id === id)
+
+export const lessonsByAuthor = (s: AppState, authorId: string) =>
+  s.customLessons.filter((l) => l.authorId === authorId).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+
+export const submissionsForLesson = (s: AppState, lessonId: string) =>
+  s.lessonSubmissions.filter((sub) => sub.lessonId === lessonId).sort((a, b) => b.submittedAt.localeCompare(a.submittedAt))
+
+export const submissionFor = (s: AppState, lessonId: string, studentId: string) =>
+  s.lessonSubmissions.find((sub) => sub.lessonId === lessonId && sub.studentId === studentId)
+
+/** Written answers a mentor still has to read, across every lesson they wrote. */
+export const pendingLessonReviews = (s: AppState, mentorId: string) =>
+  s.lessonSubmissions.filter(
+    (sub) => sub.status === 'submitted' && s.customLessons.some((l) => l.id === sub.lessonId && l.authorId === mentorId),
+  )
