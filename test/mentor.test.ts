@@ -76,6 +76,7 @@ async function run() {
   check('method is POST', c?.method === 'POST')
   check('key travels in x-api-key', c?.headers['x-api-key'] === 'test-key-not-a-real-one', c?.headers)
   check('api version pinned', c?.headers['anthropic-version'] === '2023-06-01')
+  check('no workspace header when none is configured', c?.headers['anthropic-workspace-id'] === undefined, c?.headers)
   check('model is Haiku 4.5', c?.body.model === 'claude-haiku-4-5-20251001', c?.body.model)
   check('max_tokens is set', typeof c?.body.max_tokens === 'number')
 
@@ -95,6 +96,20 @@ async function run() {
   check('question survives', out.question === 'Какое напряжение на VCC?', out.question)
   check('followUps survive', Array.isArray(out.followUps) && out.followUps.length === 2, out.followUps)
   check('code survives', (out.code as { source?: string })?.source === 'pinMode(9, OUTPUT);', out.code)
+
+  // An organisation-level key is refused until a workspace is named, so the header must go out.
+  process.env.ANTHROPIC_WORKSPACE_ID = '  wrkspc_test123' + NL
+  stubAnthropic({ text: GOOD })
+  await post(ASK)
+  check('workspace header is sent when configured', (captured as Captured | null)?.headers['anthropic-workspace-id'] === 'wrkspc_test123', (captured as Captured | null)?.headers)
+
+  // A key pasted into a dashboard field arrives with whitespace; a header holding it is rejected.
+  process.env.ANTHROPIC_API_KEY = ' test-key-not-a-real-one' + NL
+  stubAnthropic({ text: GOOD })
+  await post(ASK)
+  check('pasted whitespace is trimmed off the key', (captured as Captured | null)?.headers['x-api-key'] === 'test-key-not-a-real-one', (captured as Captured | null)?.headers)
+  process.env.ANTHROPIC_API_KEY = 'test-key-not-a-real-one'
+  delete process.env.ANTHROPIC_WORKSPACE_ID
 
   // --- shapes the model really produces ------------------------------------------------------
   stubAnthropic({ text: '```json' + NL + GOOD + NL + '```' })

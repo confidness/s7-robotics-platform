@@ -78,6 +78,7 @@ async function liveTest(): Promise<string> {
     if (res.status === 501) return t('set_key_in_vercel_then_redeploy', { key: 'ANTHROPIC_API_KEY' })
     // A 400 covers both an empty wallet and a malformed request, so the message decides, not the code.
     if (/credit balance/i.test(data.detail ?? '')) return t('live_no_credit')
+    if (/workspace/i.test(data.detail ?? '')) return t('live_needs_workspace')
     if (data.status === 401 || data.status === 403) return t('live_key_rejected')
     if (data.status === 429) return t('live_rate_limited')
     const code = String(data.status ?? data.error ?? res.status)

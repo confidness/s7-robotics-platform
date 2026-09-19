@@ -70,9 +70,15 @@ export default async function handler(req: Request): Promise<Response> {
   if (req.method === 'GET') return json({ ok: true, configured: Boolean(process.env.ANTHROPIC_API_KEY), model: MODEL }, 200)
   if (req.method !== 'POST') return json({ error: 'method_not_allowed' }, 405)
 
-  const key = process.env.ANTHROPIC_API_KEY
+  // Trimmed for the same reason as the workspace id: a value pasted into a dashboard field
+  // routinely carries a trailing newline, and a header holding one is rejected before it is sent.
+  const key = process.env.ANTHROPIC_API_KEY?.trim()
   // No key configured is a normal state, not a failure — the client has a local fallback.
   if (!key) return json({ error: 'not_configured' }, 501)
+
+  // Optional, and only an organisation-level key needs it. Trimmed because a value pasted into a
+  // dashboard field picks up whitespace, and a header with a stray newline is rejected outright.
+  const workspace = process.env.ANTHROPIC_WORKSPACE_ID?.trim()
 
   let body: Body
   try {
@@ -94,6 +100,10 @@ export default async function handler(req: Request): Promise<Response> {
         'content-type': 'application/json',
         'x-api-key': key,
         'anthropic-version': '2023-06-01',
+        // An organisation-level key belongs to no workspace, and Anthropic refuses it with a 400
+        // until one is named. A key created inside a workspace carries that itself and needs no
+        // header, so this is set only when there is something to set.
+        ...(workspace ? { 'anthropic-workspace-id': workspace } : {}),
       },
       body: JSON.stringify({
         model: MODEL,

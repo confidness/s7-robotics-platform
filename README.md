@@ -211,6 +211,9 @@ that demonstrates a technique is fine; a working version of the assignment is no
    not be:
    - `MENTOR_PIN` — the 8-digit PIN that gates mentor registration.
    - `ANTHROPIC_API_KEY` — the key for the AI mentor.
+   - `ANTHROPIC_WORKSPACE_ID` — only if that key was created at the organisation level rather
+     than inside a workspace. Anthropic refuses such a key with a 400 until a workspace is
+     named; **Send a test question** in Settings says so in as many words when it happens.
 4. Deploy. Build command `npm run build`, output `dist`.
 5. Sign in as a mentor and open **Settings → Server features**. It reports, for each endpoint,
    whether it is deployed and whether its key is set — without ever revealing the value. Both
