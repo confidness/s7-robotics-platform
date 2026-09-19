@@ -76,10 +76,10 @@
 
   /* The material, as variables. Light values live here; the dark block below swaps them. */
   --glass-card: linear-gradient(152deg, rgb(255 255 255 / 0.9), rgb(255 255 255 / 0.87));
-  --glass-chrome: linear-gradient(160deg, rgb(255 255 255 / 0.88), rgb(255 255 255 / 0.84));
+  --glass-chrome: linear-gradient(160deg, rgb(252 253 255 / 0.95), rgb(249 251 254 / 0.93));
   --glass-dim: linear-gradient(150deg, rgb(255 255 255 / 0.66), rgb(255 255 255 / 0.6));
   --glass-border: rgb(15 23 36 / 0.07);
-  --glass-rim: linear-gradient(125deg, rgb(255 255 255 / 0.34) 0%, rgb(255 255 255 / 0.1) 45%, rgb(255 255 255 / 0.24) 100%);
+  --glass-rim: linear-gradient(125deg, rgb(255 255 255 / 0.16) 0%, rgb(255 255 255 / 0.05) 45%, rgb(255 255 255 / 0.11) 100%);
   --fill-strong: rgb(255 255 255 / 0.9);
   /* The lift a control gets on hover or focus. A literal white here would erase text in the dark. */
   --fill-raised: rgb(255 255 255 / 0.99);
@@ -130,10 +130,10 @@
   --color-brand-800: #c4daff;
 
   --glass-card: linear-gradient(152deg, rgb(255 255 255 / 0.075), rgb(255 255 255 / 0.065));
-  --glass-chrome: linear-gradient(160deg, rgb(255 255 255 / 0.085), rgb(255 255 255 / 0.075));
+  --glass-chrome: linear-gradient(160deg, rgb(22 29 43 / 0.93), rgb(19 26 38 / 0.91));
   --glass-dim: linear-gradient(150deg, rgb(255 255 255 / 0.07), rgb(255 255 255 / 0.06));
   --glass-border: rgb(255 255 255 / 0.1);
-  --glass-rim: linear-gradient(125deg, rgb(255 255 255 / 0.16) 0%, rgb(255 255 255 / 0.04) 45%, rgb(255 255 255 / 0.1) 100%);
+  --glass-rim: linear-gradient(125deg, rgb(255 255 255 / 0.06) 0%, rgb(255 255 255 / 0.02) 45%, rgb(255 255 255 / 0.04) 100%);
   --fill-strong: rgb(255 255 255 / 0.14);
   --fill-raised: rgb(255 255 255 / 0.2);
   --fill: rgb(255 255 255 / 0.09);
