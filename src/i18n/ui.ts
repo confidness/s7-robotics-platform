@@ -1683,4 +1683,9 @@ export const UI: Record<string, { en: string; ru: string; kk: string }> = {
     ru: 'Не удалось проверить PIN. Проверь соединение и попробуй снова.',
     kk: 'PIN тексерілмеді. Байланысты тексеріп, қайта көр.',
   },
+  pass_the_auto_check_on_the_code_tab_first: {
+    en: 'Pass the auto check on the Code tab first — the challenge builds on a working sketch.',
+    ru: 'Сначала пройди автопроверку на вкладке «Код» — испытание строится на рабочем скетче.',
+    kk: 'Алдымен «Код» бетіндегі автотексерістен өт — сынақ жұмыс істейтін скетчке негізделген.',
+  },
 }

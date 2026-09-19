@@ -20,7 +20,15 @@ export function notify(s: AppState, n: Omit<Notification, 'id' | 'createdAt' | '
   return { ...s, notifications: [{ ...n, id: uid('n'), createdAt: now(), read: false }, ...s.notifications] }
 }
 
+/**
+ * XP is paid once per thing, and this is where that is guaranteed.
+ *
+ * `refId` names the thing — a lesson, a challenge, a project, an achievement — so a second award
+ * for the same one is refused no matter which path asked. Guarding each caller separately is how
+ * a resubmitted project came to pay twice; one choke point cannot drift like that.
+ */
 export function awardXp(s: AppState, userId: string, amount: number, reason: string, kind: XPTransaction['kind'], refId?: string, vars?: TextVars): AppState {
+  if (refId && s.xp.some((t) => t.userId === userId && t.kind === kind && t.refId === refId)) return s
   const tx: XPTransaction = { id: uid('xp'), userId, amount, reason, vars, kind, createdAt: now(), refId }
   return patchProfile({ ...s, xp: [tx, ...s.xp] }, userId, (p) => ({ ...p, xp: p.xp + amount }))
 }
@@ -249,6 +257,7 @@ export function registerUser(s: AppState, input: { name: string; email: string; 
       currentCourseId: 'arduino',
       completedLessonIds: [],
       completedChallengeIds: [],
+      passedCheckLessonIds: [],
       unlockedAchievementIds: [],
       goal: 'goal_complete_first_lesson',
     }
@@ -276,9 +285,17 @@ export function setCurrentCourse(s: AppState, userId: string, courseId: string):
   return patchProfile(s, userId, (p) => ({ ...p, currentCourseId: courseId }))
 }
 
-export function markCodeCheckPassed(s: AppState, userId: string): AppState {
+export function markCodeCheckPassed(s: AppState, userId: string, lessonId?: string): AppState {
   const profile = s.profiles.find((p) => p.userId === userId)
-  if (!profile || profile.unlockedAchievementIds.includes('code-explorer')) return s
+  if (!profile) return s
+
+  // Recorded per lesson so the challenge stays gated after the student navigates away.
+  let base = s
+  if (lessonId && !profile.passedCheckLessonIds.includes(lessonId)) {
+    base = patchProfile(s, userId, (p) => ({ ...p, passedCheckLessonIds: [...p.passedCheckLessonIds, lessonId] }))
+  }
+  if (profile.unlockedAchievementIds.includes('code-explorer')) return base
+  s = base
   const achievement = s.achievements.find((a) => a.id === 'code-explorer')!
   let next = patchProfile(s, userId, (p) => ({ ...p, unlockedAchievementIds: [...p.unlockedAchievementIds, 'code-explorer'] }))
   next = awardXp(next, userId, achievement.xp, 'xp_achievement_unlocked', 'achievement', achievement.id, { achievementId: achievement.id })

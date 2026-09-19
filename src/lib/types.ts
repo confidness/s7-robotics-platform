@@ -35,6 +35,8 @@ export interface StudentProfile {
   currentCourseId: string
   completedLessonIds: string[]
   completedChallengeIds: string[]
+  /** Lessons whose auto code check has passed — what gates the challenge. */
+  passedCheckLessonIds: string[]
   unlockedAchievementIds: string[]
   goal: string
 }

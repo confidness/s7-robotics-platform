@@ -65,7 +65,7 @@ interface Ctx {
   enroll: (courseId: string) => void
   updateProfile: (patch: { name?: string; bio?: string; city?: string; goal?: string }) => void
   setCurrentCourse: (courseId: string) => void
-  codeCheckPassed: () => void
+  codeCheckPassed: (lessonId?: string) => void
   joinTeam: (teamId: string) => void
   setTaskStatus: (taskId: string, status: AppState['competitionTasks'][number]['status'], teamId?: string) => void
   readNotifications: (id?: string) => void
@@ -166,7 +166,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       enroll: (courseId) => user && setState((s) => logic.enroll(s, user.id, courseId)),
       updateProfile: (patch) => user && setState((s) => logic.updateUser(s, user.id, patch)),
       setCurrentCourse: (courseId) => user && setState((s) => logic.setCurrentCourse(s, user.id, courseId)),
-      codeCheckPassed: () => user && setState((s) => logic.markCodeCheckPassed(s, user.id)),
+      codeCheckPassed: (lessonId) => user && setState((s) => logic.markCodeCheckPassed(s, user.id, lessonId)),
       joinTeam: (teamId) => user && setState((s) => logic.joinTeam(s, user.id, teamId)),
       setTaskStatus: (taskId, status, teamId) => setState((s) => logic.setTaskStatus(s, taskId, status, teamId)),
       readNotifications: (id) => user && setState((s) => logic.readNotifications(s, user.id, id)),

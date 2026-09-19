@@ -82,6 +82,9 @@ function LessonPage() {
   const module = modulesForCourse(course.id).find((m) => m.id === lesson.moduleId)
   const lessonDone = profile.completedLessonIds.includes(lesson.id)
   const challengeDone = profile.completedChallengeIds.includes(lesson.challenge.id)
+  // The challenge builds on a working sketch, so it opens once the auto check passes. Lessons
+  // with no checks to run have nothing to prove, and open straight away.
+  const checkPassed = lesson.checks.length === 0 || profile.passedCheckLessonIds.includes(lesson.id)
   const next = nextLessonAfter(state, lesson.id)
   const sectionIndex = ORDER.indexOf(section)
   const allRequirementsChecked = checked.length === lesson.task.requirements.length
@@ -94,7 +97,7 @@ function LessonPage() {
       setReport(result)
       setRunning(false)
       if (result.failed.length === 0) {
-        codeCheckPassed()
+        codeCheckPassed(lesson!.id)
         toast({ title: t('all_checks_passed'), body: t('requirements_met', { n: result.passed.length, total: result.passed.length }), tone: 'success' })
       } else {
         toast({ title: t('checks_passed_count', { n: result.passed.length, total: result.passed.length + result.failed.length }), body: t('open_the_report_below_to_see_what_is_missing'), tone: 'info' })
@@ -552,7 +555,7 @@ function LessonPage() {
               <Button
                 icon={CheckCircle2}
                 variant={challengeDone ? 'secondary' : 'success'}
-                disabled={challengeDone}
+                disabled={challengeDone || !checkPassed}
                 onClick={() => {
                   completeChallenge(lesson.id)
                   toast({ title: t('challenge_complete'), body: t('xp_added_to_your_total', { n: lesson.challenge.xp }), tone: 'success' })
@@ -563,6 +566,9 @@ function LessonPage() {
               <Button variant="ghost" icon={Bot} onClick={() => setAiOpen(true)}>
                 {t('ask_for_a_hint')}
               </Button>
+              {!challengeDone && !checkPassed && (
+                <p className="w-full text-xs font-medium text-ink-500">{t('pass_the_auto_check_on_the_code_tab_first')}</p>
+              )}
             </div>
           </div>
         </Card>

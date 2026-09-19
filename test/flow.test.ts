@@ -170,6 +170,34 @@ ls = logic.deleteCustomLesson(ls, 'cl-3')
 assert.ok(!ls.customLessons.some((l) => l.id === 'cl-3'))
 assert.ok(!ls.lessonSubmissions.some((s) => s.lessonId === 'cl-3'), 'answers do not outlive their lesson')
 
+// --- XP is paid once per thing ------------------------------------------------------------------------
+// Reported from the outside: a project sent back for changes and resubmitted paid its submission
+// XP again. The guard now lives in awardXp, so every path is covered, not just this one.
+{
+  const start = logic.upsertProject(returned, STUDENT, { title: 'Farm', description: 'x', code: 'void loop() {}', notes: '', attachments: [], courseId: 'arduino', lessonId: 'ar-l4' }, 'submitted')
+  const paidOnce = profileOf(start.state, STUDENT)!.xp
+  const bounced = logic.reviewProject(start.state, mentor, start.project.id, 'needs_changes', 'Add the timeout.')
+  const again = logic.upsertProject(bounced, STUDENT, { id: start.project.id, title: 'Farm', description: 'x', code: 'void loop() {}', notes: '', attachments: [], courseId: 'arduino', lessonId: 'ar-l4' }, 'submitted').state
+  // Total XP may legitimately move — an achievement can become eligible — so the assertion is
+  // about the submission award itself, which is what was being farmed.
+  const paidFor = (s: typeof again) => s.xp.filter((t) => t.kind === 'submission' && t.refId === start.project.id)
+  assert.equal(paidFor(again).length, 1, 'resubmitting does not pay the submission XP again')
+  assert.equal(
+    paidFor(again).reduce((n, t) => n + t.amount, 0),
+    paidFor(start.state).reduce((n, t) => n + t.amount, 0),
+    'the submission is worth the same after a resubmit as before',
+  )
+  void paidOnce
+
+  // The same guard, asked directly and from a different angle.
+  const twice = logic.awardXp(again, STUDENT, 500, 'xp_lesson_completed', 'lesson', 'ar-l1')
+  assert.equal(profileOf(twice, STUDENT)!.xp, profileOf(again, STUDENT)!.xp, 'a lesson already paid cannot pay again')
+
+  // An award with nothing to identify it still goes through — there is nothing to deduplicate.
+  const anon = logic.awardXp(again, STUDENT, 5, 'xp_lesson_completed', 'lesson')
+  assert.equal(profileOf(anon, STUDENT)!.xp, profileOf(again, STUDENT)!.xp + 5)
+}
+
 // --- the model reply parser -------------------------------------------------------------------------
 // The one fragile seam in the AI path: a model that wraps its JSON, or drops a field, must not
 // cost the student an answer — and junk must fall through to the offline base rather than render.
