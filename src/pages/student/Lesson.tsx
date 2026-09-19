@@ -293,7 +293,7 @@ function LessonPage() {
                       setReport(null)
                       toast({ title: t('worked_example_loaded'), body: t('read_it_then_make_it_yours_the_mentor_will_ask_h'), tone: 'info' })
                     }}
-                    className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-ink-300 transition hover:bg-white/10 hover:text-white"
+                    className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-[#cbd5e1] transition hover:bg-white/10 hover:text-white"
                   >
                     <Wand2 size={13} aria-hidden="true" />{t('example')}</button>
                   <button
@@ -301,7 +301,7 @@ function LessonPage() {
                       setCode(lesson.code.starter ?? lesson.code.source)
                       setReport(null)
                     }}
-                    className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-ink-300 transition hover:bg-white/10 hover:text-white"
+                    className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-[#cbd5e1] transition hover:bg-white/10 hover:text-white"
                   >
                     <RotateCcw size={13} aria-hidden="true" /> {t('reset')}
                   </button>
@@ -526,7 +526,7 @@ function LessonPage() {
                       {t('reveal_hint_n', { n: i + 1, total: lesson.challenge.hints.length })}
                     </button>
                   ) : (
-                    <p className="rounded-xl border border-dashed edge px-4 py-3 text-sm text-ink-400">{t('hint_n_locked', { n: i + 1 })}</p>
+                    <p className="rounded-xl border border-dashed edge px-4 py-3 text-sm text-ink-500">{t('hint_n_locked', { n: i + 1 })}</p>
                   )}
                 </li>
               ))}

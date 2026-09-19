@@ -102,7 +102,7 @@ function NotificationBell() {
     <div className="relative">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="relative grid h-10 w-10 place-items-center rounded-full fill text-ink-600 ring-1 rim transition hover:bg-white hover:text-ink-900"
+        className="relative grid h-10 w-10 place-items-center rounded-full fill text-ink-600 ring-1 rim transition hover:fill-raised hover:text-ink-900"
         aria-label={unread ? t('notifications_n_unread', { n: unread }) : t('notifications')}
         aria-expanded={open}
       >
@@ -140,7 +140,7 @@ function NotificationBell() {
                     <span className="min-w-0">
                       <span className="block text-sm font-semibold text-ink-900">{t(n.title)}</span>
                       <span className="mt-0.5 block text-xs leading-relaxed text-ink-600">{t(n.body, resolveVars(state, n.vars))}</span>
-                      <span className="mt-1 block text-[11px] text-ink-400">{formatDate(n.createdAt, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
+                      <span className="mt-1 block text-[11px] text-ink-500">{formatDate(n.createdAt, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
                     </span>
                   </button>
                 </li>
@@ -161,7 +161,7 @@ function UserMenu() {
 
   return (
     <div className="relative">
-      <button onClick={() => setOpen((o) => !o)} className="flex items-center gap-2 rounded-full fill py-1.5 pr-3 pl-1.5 ring-1 rim transition hover:bg-white" aria-expanded={open} aria-label={t('account_menu')}>
+      <button onClick={() => setOpen((o) => !o)} className="flex items-center gap-2 rounded-full fill py-1.5 pr-3 pl-1.5 ring-1 rim transition hover:fill-raised" aria-expanded={open} aria-label={t('account_menu')}>
         <Avatar name={user.name} initials={user.avatar} size={30} />
         <span className="hidden text-left sm:block">
           <span className="block text-xs font-bold text-ink-900">{user.name.split(' ')[0]}</span>
@@ -210,7 +210,7 @@ function XpPill() {
   if (!profile) return null
   const lv = levelFor(profile.xp)
   return (
-    <Link to="/achievements" className="hidden items-center gap-3 rounded-full fill px-3 py-1.5 ring-1 rim transition hover:bg-white md:flex" aria-label={t('level_and_xp', { n: lv.level.index, xp: profile.xp })}>
+    <Link to="/achievements" className="hidden items-center gap-3 rounded-full fill px-3 py-1.5 ring-1 rim transition hover:fill-raised md:flex" aria-label={t('level_and_xp', { n: lv.level.index, xp: profile.xp })}>
       <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-b from-amber-400 to-orange-500 text-white shadow-[0_6px_14px_-6px_rgb(249_115_22/0.9)]">
         <Zap size={15} aria-hidden="true" />
       </span>
@@ -325,7 +325,7 @@ export default function Layout() {
             <div className="relative">
               <div className="mb-7 flex items-center justify-between px-1">
                 <Logo />
-                <button onClick={() => setDrawer(false)} className="grid h-8 w-8 place-items-center rounded-full fill text-ink-500 hover:bg-white hover:text-ink-900" aria-label={t('close_navigation')}>
+                <button onClick={() => setDrawer(false)} className="grid h-8 w-8 place-items-center rounded-full fill text-ink-500 hover:fill-raised hover:text-ink-900" aria-label={t('close_navigation')}>
                   <X size={17} aria-hidden="true" />
                 </button>
               </div>

@@ -24,7 +24,7 @@ const TOKEN = new RegExp(
 
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
-const CLASS = ['text-[#64748b] italic', 'text-emerald-300', 'text-amber-300', 'text-sky-300 font-medium', 'text-violet-300', 'text-brand-300']
+const CLASS = ['text-[#7b8a9e] italic', 'text-emerald-300', 'text-amber-300', 'text-sky-300 font-medium', 'text-violet-300', 'text-brand-300']
 
 export function highlight(code: string): string {
   let out = ''
@@ -82,7 +82,7 @@ export function CodeBlock({ source, filename, actions }: { source: string; filen
         </span>
       </div>
       <div className="flex max-h-[26rem] overflow-auto text-[13px] leading-[1.65]">
-        <pre aria-hidden="true" className="sticky left-0 shrink-0 code-surface px-3 py-4 text-right font-mono text-[#64748b] select-none">
+        <pre aria-hidden="true" className="sticky left-0 shrink-0 code-surface px-3 py-4 text-right font-mono text-[#7b8a9e] select-none">
           {Array.from({ length: lines }, (_, i) => i + 1).join('\n')}
         </pre>
         <pre className="min-w-0 flex-1 py-4 pr-4 font-mono text-[#e2e8f0]">
@@ -118,7 +118,7 @@ export function CodeEditor({ value, onChange, filename, actions, minRows = 14 }:
       </div>
 
       <div className="relative flex max-h-[30rem] overflow-auto text-[13px] leading-[1.65]">
-        <pre ref={gutterRef} aria-hidden="true" className="sticky left-0 z-10 shrink-0 code-surface px-3 py-4 text-right font-mono text-[#64748b] select-none">
+        <pre ref={gutterRef} aria-hidden="true" className="sticky left-0 z-10 shrink-0 code-surface px-3 py-4 text-right font-mono text-[#7b8a9e] select-none">
           {Array.from({ length: lines }, (_, i) => i + 1).join('\n')}
         </pre>
         <div className="relative min-w-0 flex-1">

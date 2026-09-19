@@ -66,15 +66,10 @@ export default function Login({ register: startOnRegister }: { register?: boolea
 
   return (
     <div className="relative min-h-screen lg:grid lg:grid-cols-[1fr_minmax(26rem,32rem)]">
-      <div className="absolute top-4 right-4 z-10 flex items-center gap-2 sm:top-6 sm:right-6">
-        <LocaleToggle compact />
-        <ThemeToggle compact />
-      </div>
-
       {/* story side — one claim, three numbers, nothing else */}
       <section className="relative hidden flex-col justify-center px-12 py-16 lg:flex xl:px-20">
         <Logo />
-        <h1 className="mt-14 max-w-xl text-[46px] leading-[1.05] font-bold tracking-[-0.035em] text-ink-900 xl:text-[58px]">{t('one_platform_from_first_led')}<span className="bg-gradient-to-r from-brand-500 to-accent-500 bg-clip-text text-transparent">{t('to_national_final')}</span>
+        <h1 className="mt-14 flex min-h-[19rem] max-w-xl flex-col justify-start text-[46px] leading-[1.05] font-bold tracking-[-0.035em] text-ink-900 xl:text-[58px]">{t('one_platform_from_first_led')}<span className="bg-gradient-to-r from-brand-500 to-accent-500 bg-clip-text text-transparent">{t('to_national_final')}</span>
         </h1>
         <p className="mt-6 max-w-md text-[17px] leading-relaxed text-ink-600">
           {t('lessons_projects_mentor_review_and_progress_in_o')}
@@ -94,7 +89,13 @@ export default function Login({ register: startOnRegister }: { register?: boolea
       </section>
 
       {/* form side */}
-      <section className="flex min-h-screen items-center justify-center px-4 py-12 sm:px-8">
+      <section className="flex min-h-screen flex-col px-4 py-5 sm:px-8 sm:py-6">
+        <div className="flex shrink-0 items-center justify-end gap-2">
+          <LocaleToggle compact />
+          <ThemeToggle compact />
+        </div>
+
+        <div className="flex flex-1 items-center justify-center py-6">
         <div className="card specular relative w-full max-w-md p-6 sm:p-8">
           <div className="relative mb-7 lg:hidden">
             <span className="inline-flex items-center gap-2.5">
@@ -216,6 +217,7 @@ export default function Login({ register: startOnRegister }: { register?: boolea
             <ShieldCheck size={13} aria-hidden="true" />
             {t('your_account_and_progress_stay_in_this_browser')}
           </p>
+        </div>
         </div>
       </section>
     </div>

@@ -268,7 +268,7 @@ export function Modal({ open, onClose, title, subtitle, children, footer, wide }
               <h2 className="text-[17px] font-bold tracking-[-0.02em] text-ink-900">{title}</h2>
               {subtitle && <p className="mt-0.5 text-sm text-ink-500">{subtitle}</p>}
             </div>
-            <button onClick={onClose} className="grid h-8 w-8 shrink-0 place-items-center rounded-full fill text-ink-500 transition hover:bg-white hover:text-ink-900" aria-label={t('close_dialog')}>
+            <button onClick={onClose} className="grid h-8 w-8 shrink-0 place-items-center rounded-full fill text-ink-500 transition hover:fill-raised hover:text-ink-900" aria-label={t('close_dialog')}>
               <svg width="15" height="15" viewBox="0 0 14 14" aria-hidden="true">
                 <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
               </svg>
@@ -334,7 +334,7 @@ export function Field({ label, hint, error, children, required }: { label: strin
 
 /** Same visual control without a width, for selects that should size to their content. */
 export const controlClass =
-  'rounded-[14px] border edge fill px-4 py-2.5 text-sm text-ink-900 backdrop-blur-sm placeholder:text-ink-400 transition focus:border-brand-400 focus:bg-white focus:ring-4 focus:ring-brand-500/15 focus:outline-none'
+  'rounded-[14px] border edge fill px-4 py-2.5 text-sm text-ink-900 backdrop-blur-sm placeholder:text-ink-500 transition focus:border-brand-400 focus:fill-raised focus:ring-4 focus:ring-brand-500/15 focus:outline-none'
 
 export const inputClass = `w-full ${controlClass}`
 

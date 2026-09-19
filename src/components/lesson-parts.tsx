@@ -291,7 +291,7 @@ export function VirtualLab() {
 
         <div className="space-y-3">
           <div className="code-surface rounded-[16px] p-3.5 font-mono text-xs leading-relaxed text-emerald-300">
-            <p className="mb-2 flex items-center gap-1.5 text-ink-400">
+            <p className="mb-2 flex items-center gap-1.5 text-[#94a3b8]">
               <Radio size={12} aria-hidden="true" /> {t('serial_monitor_baud')}
             </p>
             {log.map((line, i) => (

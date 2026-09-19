@@ -74,6 +74,8 @@
   --glass-border: rgb(255 255 255 / 0.75);
   --glass-rim: linear-gradient(125deg, rgb(255 255 255 / 0.95) 0%, rgb(255 255 255 / 0.15) 28%, rgb(255 255 255 / 0.05) 62%, rgb(255 255 255 / 0.75) 100%);
   --fill-strong: rgb(255 255 255 / 0.82);
+  /* The lift a control gets on hover or focus. A literal white here would erase text in the dark. */
+  --fill-raised: rgb(255 255 255 / 0.96);
   --fill: rgb(255 255 255 / 0.68);
   --fill-soft: rgb(255 255 255 / 0.5);
   --edge: rgb(255 255 255 / 0.7);
@@ -126,6 +128,7 @@
   --glass-border: rgb(255 255 255 / 0.14);
   --glass-rim: linear-gradient(125deg, rgb(255 255 255 / 0.55) 0%, rgb(255 255 255 / 0.06) 30%, rgb(255 255 255 / 0.03) 64%, rgb(255 255 255 / 0.35) 100%);
   --fill-strong: rgb(255 255 255 / 0.14);
+  --fill-raised: rgb(255 255 255 / 0.2);
   --fill: rgb(255 255 255 / 0.09);
   --fill-soft: rgb(255 255 255 / 0.055);
   --edge: rgb(255 255 255 / 0.13);
@@ -162,6 +165,7 @@
   --color-amber-800: #fde68a;
   --color-amber-900: #fef3c7;
 
+  --color-rose-600: #fb7185;
   --color-rose-50: rgb(244 63 94 / 0.14);
   --color-rose-100: rgb(244 63 94 / 0.2);
   --color-rose-200: rgb(251 113 133 / 0.3);
@@ -240,6 +244,10 @@
   :where(.grid) > * {
     min-width: 0;
   }
+}
+
+@utility fill-raised {
+  background-color: var(--fill-raised);
 }
 
 @layer components {
