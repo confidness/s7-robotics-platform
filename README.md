@@ -13,8 +13,13 @@ students and no fake projects — the first person to open it registers the firs
 | Student | Register with name, email and password. You start on Arduino lesson one. |
 | Mentor | Register and pick **Mentor** — the form then asks for the mentor PIN. |
 
-The PIN comes from `VITE_MENTOR_PIN`. Locally it falls back to `4821`; in production set it as
-an environment variable so mentor accounts stay gated.
+The PIN comes from `VITE_MENTOR_PIN`, falling back to `4821` locally. Set your own in Vercel.
+
+It is worth being plain about what that PIN is: Vite inlines every `VITE_*` variable into the
+client bundle at build time, so the value ends up readable in devtools no matter where it is
+configured. The PIN stops a curious student, not a determined one. Together with passwords held
+in `localStorage`, this is a local-first prototype — gating that actually holds needs a server
+to check it.
 
 ## The loop
 
