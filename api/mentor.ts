@@ -99,7 +99,12 @@ export default async function handler(req: Request): Promise<Response> {
         model: MODEL,
         max_tokens: MAX_TOKENS,
         system: systemPrompt(locale, body.lessonTitle, body.courseTitle, body.code),
-        messages: [{ role: 'user', content: question }],
+        // The opening brace is put in the model's mouth: it continues the JSON instead of
+        // deciding whether to write any. Asking nicely in the prompt is not the same guarantee.
+        messages: [
+          { role: 'user', content: question },
+          { role: 'assistant', content: '{' },
+        ],
       }),
     })
 
@@ -110,13 +115,28 @@ export default async function handler(req: Request): Promise<Response> {
 
     const data = (await upstream.json()) as { content?: { type: string; text?: string }[] }
     const raw = data.content?.find((c) => c.type === 'text')?.text ?? ''
-    const parsed = parseReply(raw)
+    // The reply is a continuation of '{', so the brace has to be put back before parsing. Trying
+    // the raw text first costs nothing and covers a model that repeated the brace anyway.
+    const parsed = parseReply(raw) ?? parseReply('{' + raw) ?? asProse(raw)
     if (!parsed) return json({ error: 'unparseable' }, 502)
 
     return json(parsed, 200)
   } catch {
     return json({ error: 'upstream' }, 502)
   }
+}
+
+/**
+ * Last resort: a model that answered in prose still answered.
+ *
+ * Discarding that over a formatting rule is how a correctly configured deployment ends up looking
+ * broken — the student sees the offline fallback and concludes the AI is down. Half-written JSON
+ * is different; it would read as gibberish, so that is still refused.
+ */
+function asProse(raw: string) {
+  const text = raw.trim()
+  if (!text || text.startsWith('{') || text.startsWith('"')) return null
+  return { text, question: '', followUps: [] as string[] }
 }
 
 /** The model is asked for bare JSON, but a stray fence or preamble should not cost us the answer. */

@@ -1706,6 +1706,11 @@ export const UI: Record<string, { en: string; ru: string; kk: string }> = {
   },
   could_not_reach_it_at_all: { en: 'Could not be reached at all.', ru: 'Совсем не отвечает.', kk: 'Мүлде жауап бермейді.' },
   checking: { en: 'Checking…', ru: 'Проверяю…', kk: 'Тексерілуде…' },
+  send_a_test_question: { en: 'Send a test question', ru: 'Отправить тестовый вопрос', kk: 'Сынақ сұрақ жіберу' },
+  live_ok: { en: 'The model answered: "{text}"', ru: 'Модель ответила: «{text}»', kk: 'Модель жауап берді: «{text}»' },
+  live_key_rejected: { en: 'The key was rejected. Check ANTHROPIC_API_KEY for a typo or a revoked key, then redeploy.', ru: 'Ключ отклонён. Проверь ANTHROPIC_API_KEY на опечатку или отзыв, затем передеплой.', kk: 'Кілт қабылданбады. ANTHROPIC_API_KEY қатесін тексер, сосын қайта деплой жаса.' },
+  live_rate_limited: { en: 'Rate limited or out of credit. The key works; the account needs topping up.', ru: 'Лимит запросов или кончился баланс. Ключ рабочий, нужно пополнить счёт.', kk: 'Сұраныс шегі немесе баланс бітті. Кілт жұмыс істейді, шотты толтыру керек.' },
+  live_failed: { en: 'It failed with {code}. The app falls back to the offline base.', ru: 'Ошибка {code}. Приложение уходит на офлайн-базу.', kk: '{code} қатесі. Қосымша офлайн базаға ауысады.' },
   check_again: { en: 'Check again', ru: 'Проверить снова', kk: 'Қайта тексеру' },
   both_fall_back_safely_the_app_works_without_them: {
     en: 'Both fall back safely — the platform works without either, the mentor just answers from its offline base.',

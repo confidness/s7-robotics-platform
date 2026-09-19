@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { AlertTriangle, CheckCircle2, RefreshCw, ServerCog } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, PlugZap, RefreshCw, ServerCog } from 'lucide-react'
 import { Button, SectionHeading } from './ui'
 import { t } from '../i18n'
 
@@ -57,10 +57,39 @@ function Row({ label, state, keyName }: { label: string; state: Health; keyName:
   )
 }
 
+/**
+ * Asks the mentor a real question and reports what came back.
+ *
+ * The health check cannot tell a good key from a bad one — a revoked or mistyped key is still a
+ * key, and reads as configured. Only a real round trip separates "the AI works" from "the AI is
+ * about to fall back silently in front of the judges", so this spends one small request to say so.
+ */
+async function liveTest(): Promise<string> {
+  try {
+    const res = await fetch('/api/mentor', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ question: 'Say OK.', locale: 'en' }),
+    })
+    const body = await res.text()
+    if (!body.trim().startsWith('{')) return t('the_function_is_not_deployed_check_api_routes')
+    const data = JSON.parse(body) as { text?: string; error?: string; status?: number }
+    if (res.ok && data.text) return t('live_ok', { text: data.text.slice(0, 90) })
+    if (res.status === 501) return t('set_key_in_vercel_then_redeploy', { key: 'ANTHROPIC_API_KEY' })
+    if (data.status === 401 || data.status === 403) return t('live_key_rejected')
+    if (data.status === 429) return t('live_rate_limited')
+    return t('live_failed', { code: String(data.status ?? data.error ?? res.status) })
+  } catch {
+    return t('could_not_reach_it_at_all')
+  }
+}
+
 export default function ServerStatus() {
   const [mentor, setMentor] = useState<Health>('checking')
   const [pin, setPin] = useState<Health>('checking')
   const [round, setRound] = useState(0)
+  const [live, setLive] = useState('')
+  const [testing, setTesting] = useState(false)
 
   useEffect(() => {
     let alive = true
@@ -81,9 +110,27 @@ export default function ServerStatus() {
         <Row label={t('mentor_pin')} state={pin} keyName="MENTOR_PIN" />
       </ul>
       <p className="mt-3 text-xs text-ink-500">{t('both_fall_back_safely_the_app_works_without_them')}</p>
-      <Button variant="secondary" size="sm" icon={RefreshCw} className="mt-4" onClick={() => setRound((n) => n + 1)}>
-        {t('check_again')}
-      </Button>
+      <div className="mt-4 flex flex-wrap gap-2">
+        <Button variant="secondary" size="sm" icon={RefreshCw} onClick={() => setRound((n) => n + 1)}>
+          {t('check_again')}
+        </Button>
+        <Button
+          variant="secondary"
+          size="sm"
+          icon={PlugZap}
+          disabled={testing}
+          onClick={() => {
+            setTesting(true)
+            setLive('')
+            void liveTest()
+              .then(setLive)
+              .finally(() => setTesting(false))
+          }}
+        >
+          {testing ? t('checking') : t('send_a_test_question')}
+        </Button>
+      </div>
+      {live && <p className="mt-3 rounded-[14px] border edge fill-soft p-3 text-sm text-ink-700">{live}</p>}
     </>
   )
 }

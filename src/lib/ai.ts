@@ -234,8 +234,14 @@ let counter = 0
 /** How long to wait for the model before falling back — a stuck student will not sit through more. */
 const MODEL_TIMEOUT_MS = 12_000
 
-/** Set once the endpoint answers 501, so an unconfigured deployment stops retrying every question. */
-let modelOffline = false
+/**
+ * When a 501 said no key was configured, so an unconfigured deployment stops asking every time.
+ *
+ * It expires rather than latching for good: a key added in the dashboard would otherwise leave
+ * every tab opened beforehand permanently offline, with nothing on screen to explain why.
+ */
+let offlineUntil = 0
+const OFFLINE_RETRY_MS = 60_000
 
 /**
  * Asks the server-side model. Returns null on anything at all — no key configured, rate limit,
@@ -243,7 +249,7 @@ let modelOffline = false
  * see an error where a hint belongs.
  */
 async function askModel(question: string, ctx: AskContext): Promise<Omit<AiReply, 'id'> | null> {
-  if (modelOffline) return null
+  if (Date.now() < offlineUntil) return null
   const abort = new AbortController()
   const timer = setTimeout(() => abort.abort(), MODEL_TIMEOUT_MS)
   try {
@@ -260,7 +266,7 @@ async function askModel(question: string, ctx: AskContext): Promise<Omit<AiReply
       }),
     })
     if (res.status === 501) {
-      modelOffline = true
+      offlineUntil = Date.now() + OFFLINE_RETRY_MS
       return null
     }
     if (!res.ok) return null
