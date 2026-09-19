@@ -83,6 +83,10 @@ nothing on the leaderboard was typed in by hand.
 
 ## Themes
 
+The material is matte: panels are a near-uniform fill over a heavily blurred backdrop, with no
+specular rim, no white inset lip and only a touch of added saturation. What reads as gloss is a
+falling gradient plus a bright top edge, and neither is there.
+
 Light, dark, or follow the system — the switch sits in the header (and in the account menu on
 phones). The choice is stored per browser and applied before first paint, so there is no flash.
 Every colour is a token in `src/index.css`: `[data-theme='dark']` swaps the ink ramp, thins the
