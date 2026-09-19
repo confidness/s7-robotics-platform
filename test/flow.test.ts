@@ -114,7 +114,7 @@ assert.equal(levelFor(400).xpToNext, 600)
 const MAX = 10
 const overLong = {
   id: 'cl-1',
-  authorId: mentor,
+  authorId: mentor.id,
   title: 'Soldering safety',
   summary: 'How to hold the iron.',
   tasks: Array.from({ length: MAX + 3 }, (_, i) => ({ id: `t${i}`, kind: 'open' as const, prompt: `Q${i}`, points: 5 })),
@@ -158,7 +158,7 @@ ls = logic.submitLessonAnswers(ls, STUDENT, 'cl-3', [{ taskId: 'w1', value: 'Bec
 const waiting = ls.lessonSubmissions.find((s) => s.lessonId === 'cl-3')!
 assert.equal(waiting.status, 'submitted', 'written answers wait for a person')
 const xpBeforeReview = profileOf(ls, STUDENT)!.xp
-ls = logic.reviewLessonSubmission(ls, waiting.id, mentor, 'Good reasoning.', 999)
+ls = logic.reviewLessonSubmission(ls, waiting.id, mentor.id, 'Good reasoning.', 999)
 const reviewed = ls.lessonSubmissions.find((s) => s.id === waiting.id)!
 assert.equal(reviewed.status, 'reviewed')
 assert.equal(reviewed.awardedXp, 20, 'the award cannot exceed what the lesson is worth')
