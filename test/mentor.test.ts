@@ -7,7 +7,7 @@
  * standing where the real endpoint does, recording exactly what it was handed.
  */
 
-import handler, { parseReply } from '../api/mentor.ts'
+import handler, { parseReply, parseProse } from '../api/mentor.ts'
 
 declare const process: { env: Record<string, string | undefined>; exitCode?: number }
 
@@ -302,6 +302,54 @@ async function run() {
   stubAnthropic({ text: GOOD })
   await post(ASK)
   check('anthropic is used again once openrouter is removed', Boolean((captured as Captured | null)?.url.includes('anthropic')), (captured as Captured | null)?.url)
+
+  // --- what a small free model actually sends back ----------------------------------------------
+  // This is the bug the hackathon deployment hit: the key worked, and the model opened its answer
+  // with the system prompt and a discussion of the JSON it had been asked for.
+  process.env.OPENROUTER_API_KEY = 'or-test-key'
+  delete process.env.ANTHROPIC_API_KEY
+
+  const or = (content: string) => ({ raw: { choices: [{ message: { content } }] } })
+
+  stubAnthropic(or(
+    'OUTPUT — reply with JSON only, no prose around it, matching exactly:' + NL +
+    '{"text": string, "question": string, "followUps": string[]}' + NL +
+    'Sure! Here is the JSON response you asked for:' + NL +
+    'Проверь питание датчика — красный провод на 5V, чёрный на GND.' + NL +
+    '? Какое напряжение показывает мультиметр на VCC?',
+  ))
+  res = await post(ASK)
+  out = (await res.json()) as Record<string, unknown>
+  const answer = String(out.text)
+  check('the leaked prompt is stripped', !/OUTPUT —|reply with JSON/i.test(answer), answer)
+  check('the JSON schema line is stripped', !answer.includes('"followUps"'), answer)
+  check('the "Sure! Here is" preamble is stripped', !/Sure! Here is/i.test(answer), answer)
+  check('the actual answer survives', answer.includes('Проверь питание датчика'), answer)
+  check('the trailing question is lifted out', out.question === 'Какое напряжение показывает мультиметр на VCC?', out.question)
+  check('the question is not left in the body', !answer.includes('Какое напряжение'), answer)
+
+  // A clean prose answer with no question line must still come through whole.
+  stubAnthropic(or('Порог нельзя зашивать в код.' + NL + NL + 'Измерь над белым и над чёрным.'))
+  out = (await (await post(ASK)).json()) as Record<string, unknown>
+  check('a clean prose answer is untouched', String(out.text) === 'Порог нельзя зашивать в код.' + NL + NL + 'Измерь над белым и над чёрным.', out.text)
+  check('no question is invented', out.question === '', out.question)
+
+  // A free model that did manage JSON is taken at its word rather than mangled.
+  stubAnthropic(or(GOOD))
+  out = (await (await post(ASK)).json()) as Record<string, unknown>
+  check('real JSON from a free model still parses', out.question === 'Какое напряжение на VCC?', out)
+
+  // Nothing but instructions left after the cleanup is not an answer; the local base is better.
+  stubAnthropic(or('OUTPUT — reply with JSON only, no prose around it.' + NL + 'STYLE:' + NL + '```' + NL + '```'))
+  res = await post(ASK)
+  check('an answer that was only instructions is refused', res.status === 502, res.status)
+
+  check('parseProse drops a bare preamble', parseProse('Вот ответ:' + NL + 'Настоящий ответ.')?.text === 'Настоящий ответ.')
+  check('parseProse keeps a question mark inside a sentence', parseProse('Почему так? Потому что.')?.text === 'Почему так? Потому что.')
+  check('parseProse refuses empty input', parseProse('   ') === null)
+
+  delete process.env.OPENROUTER_API_KEY
+  process.env.ANTHROPIC_API_KEY = 'test-key-not-a-real-one'
 
   // --- parseReply guards -----------------------------------------------------------------------
   check('empty text is rejected', parseReply('{"text":"   "}') === null)

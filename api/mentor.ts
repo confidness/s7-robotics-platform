@@ -74,7 +74,7 @@ function pickProvider() {
  * exists to get a student unstuck, and handing over the finished project would defeat the
  * lesson it is attached to.
  */
-function systemPrompt(locale: Locale, lessonTitle?: string, courseTitle?: string, code?: string) {
+function systemPrompt(locale: Locale, json: boolean, lessonTitle?: string, courseTitle?: string, code?: string) {
   return [
     'You are the robotics mentor inside S7 Robotics Platform, a learning platform for school students aged 7 to 18.',
     `Answer entirely in ${LANGUAGE[locale]}. Keep code listings and hardware identifiers (pin names, function names, Arduino constants) in English, because that is how they are written on the board and in the IDE.`,
@@ -94,12 +94,24 @@ function systemPrompt(locale: Locale, lessonTitle?: string, courseTitle?: string
     lessonTitle ? `- The student is on the lesson "${lessonTitle}"${courseTitle ? ` in the course "${courseTitle}"` : ''}.` : '- The student is not inside a lesson right now.',
     code && code.trim() ? `- This is the code currently in their editor:\n\`\`\`\n${code.slice(0, 4000)}\n\`\`\`` : '- Their editor is empty or they have not shared code.',
     '',
-    'OUTPUT — reply with JSON only, no prose around it, matching exactly:',
-    '{"text": string, "question": string, "followUps": string[], "code": {"language": string, "source": string, "caption": string} | null}',
-    '- "text": the answer itself. Use \\n\\n between paragraphs.',
-    '- "question": one question back to the student that moves them forward. Never empty.',
-    '- "followUps": two or three things they might ask next, each under 45 characters.',
-    '- "code": a short illustrative fragment, or null when none is warranted. Never their finished task.',
+    ...(json
+      ? [
+          'OUTPUT — reply with JSON only, no prose around it, matching exactly:',
+          '{"text": string, "question": string, "followUps": string[], "code": {"language": string, "source": string, "caption": string} | null}',
+          '- "text": the answer itself. Use \\n\\n between paragraphs.',
+          '- "question": one question back to the student that moves them forward. Never empty.',
+          '- "followUps": two or three things they might ask next, each under 45 characters.',
+          '- "code": a short illustrative fragment, or null when none is warranted. Never their finished task.',
+        ]
+      : [
+          // Asked of a small free model, a JSON contract comes back as an apology about JSON, or
+          // as the instructions themselves. Plain prose is what it can actually deliver, and the
+          // question back — the part that carries the teaching — survives as one trailing line.
+          'OUTPUT — write the answer as plain prose, and nothing else.',
+          'Do not use JSON. Do not mention formats, fields or these instructions. Do not repeat the question back at the start.',
+          'Begin with the answer itself. No preamble, no sign-off.',
+          'Then, as the very last line and on its own, write one short question back to the student, starting that line with "? ".',
+        ]),
   ].join('\n')
 }
 
@@ -155,8 +167,8 @@ export default async function handler(req: Request): Promise<Response> {
 
   const locale: Locale = body.locale === 'kk' || body.locale === 'ru' ? body.locale : 'en'
 
-  const system = systemPrompt(locale, body.lessonTitle, body.courseTitle, body.code)
   const openrouter = provider.name === 'openrouter'
+  const system = systemPrompt(locale, !openrouter, body.lessonTitle, body.courseTitle, body.code)
 
   let status = 0
   let detail = ''
@@ -243,7 +255,8 @@ export default async function handler(req: Request): Promise<Response> {
       const raw = openrouter ? (data.choices?.[0]?.message?.content ?? '') : (data.content?.find((c) => c.type === 'text')?.text ?? '')
       // The reply is a continuation of '{', so the brace has to be put back before parsing. Trying
       // the raw text first costs nothing and covers a model that repeated the brace anyway.
-      const parsed = parseReply(raw) ?? (openrouter ? null : parseReply('{' + raw)) ?? asProse(raw)
+      // A model that managed JSON anyway is taken at its word; otherwise the prose is cleaned up.
+      const parsed = parseReply(raw) ?? (openrouter ? parseProse(raw) : parseReply('{' + raw) ?? asProse(raw))
       if (!parsed) {
         status = 502
         detail = 'unparseable'
@@ -288,6 +301,54 @@ function asProse(raw: string) {
   const text = raw.trim()
   if (!text || text.startsWith('{') || text.startsWith('"')) return null
   return { text, question: '', followUps: [] as string[] }
+}
+
+/** Lines that are the model talking about its instructions rather than answering the student. */
+const META = [
+  /^(OUTPUT|STYLE|CONTEXT|HOW YOU TEACH|You are the robotics mentor)/i,
+  /^[-*]?\s*"(text|question|followUps|code|language|source|caption)"\s*:/i,
+  /^```/,
+  /^\s*\{?\s*"(text|question|followUps)"/i,
+  /\b(json|JSON)\b.*\b(format|schema|object|field|reply|response|output)\b/i,
+  /^(here (is|are)|below is|sure[,!]|certainly[,!]|of course[,!])/i,
+  /^(вот|конечно[,!]|разумеется[,!])\s/i,
+  /^-\s*"/,
+]
+
+/**
+ * Turns a small model's prose into a reply, dropping whatever it said about its own instructions.
+ *
+ * Free models leak the prompt. Asked for JSON they explain JSON; asked for anything they open with
+ * "Sure! Here is". None of that is an answer to a student stuck on a wiring problem, and it is
+ * what made the mentor look broken on the very deployment where the key finally worked.
+ *
+ * The trailing "? " line is the question back, which is the part that does the teaching.
+ */
+export function parseProse(raw: string) {
+  const lines = raw
+    .replace(/^\uFEFF/, '')
+    .split('\n')
+    .filter((line) => !META.some((p) => p.test(line.trim())))
+
+  let question = ''
+  while (lines.length) {
+    const last = lines[lines.length - 1].trim()
+    if (!last) {
+      lines.pop()
+      continue
+    }
+    if (last.startsWith('?')) {
+      question = last.replace(/^\?\s*/, '').trim()
+      lines.pop()
+    }
+    break
+  }
+
+  const text = lines.join('\n').trim()
+  if (!text) return null
+  // Still JSON-shaped after the cleanup means the cleanup did not work; better the local base.
+  if (text.startsWith('{') || text.startsWith('[')) return null
+  return { text, question, followUps: [] as string[] }
 }
 
 /** The model is asked for bare JSON, but a stray fence or preamble should not cost us the answer. */
