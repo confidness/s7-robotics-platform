@@ -206,8 +206,15 @@ that demonstrates a technique is fine; a working version of the assignment is no
 1. Push the repository to GitHub.
 2. Import it in Vercel. The framework preset is **Vite**; `vercel.json` already routes every
    path back to `index.html` so deep links like `/learn/arduino/ar-l4` work.
-3. Add the environment variable `VITE_MENTOR_PIN` (Production and Preview).
+3. Add two environment variables (Production and Preview), both **without** a `VITE_` prefix —
+   that prefix would inline them into the browser bundle, which is exactly what a secret must
+   not be:
+   - `MENTOR_PIN` — the 8-digit PIN that gates mentor registration.
+   - `ANTHROPIC_API_KEY` — the key for the AI mentor.
 4. Deploy. Build command `npm run build`, output `dist`.
+5. Sign in as a mentor and open **Settings → Server features**. It reports, for each endpoint,
+   whether it is deployed and whether its key is set — without ever revealing the value. Both
+   variables are read at request time, but a redeploy is still needed for a newly added one.
 
 ## Stack
 

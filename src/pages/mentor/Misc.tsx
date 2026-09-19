@@ -7,6 +7,7 @@ import { lessonsForCourse, modulesForCourse } from '../../lib/curriculum'
 import { Avatar, Badge, Button, Card, EmptyState, Modal, ProgressBar, SectionHeading } from '../../components/ui'
 import { formatDate } from '../../lib/hooks'
 import { NoEvents } from './EventBuilder'
+import ServerStatus from '../../components/ServerStatus'
 import { t, formatNumber } from '../../i18n'
 
 /* ------------------------------------------------------------------ courses */
@@ -370,6 +371,10 @@ export function MentorSettings() {
             </div>
           ))}
         </dl>
+      </Card>
+
+      <Card className="p-5 sm:p-6">
+        <ServerStatus />
       </Card>
 
       <Card className="p-5 sm:p-6">

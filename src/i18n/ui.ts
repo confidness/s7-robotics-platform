@@ -884,7 +884,6 @@ export const UI: Record<string, { en: string; ru: string; kk: string }> = {
   attendance_percent: { en: '{n}% attendance', ru: 'Посещаемость {n}%', kk: 'Қатысу {n}%' },
   n_to_review: { en: '{n} to review', ru: '{n} на проверку', kk: '{n} тексеруге' },
   approval_rate: { en: '{n}% approval rate', ru: '{n}% принятых', kk: '{n}% мақұлданған' },
-  points_short: { en: '{n} pts', ru: '{n} очк.', kk: '{n} ұпай' },
   n_points: { en: '{n} points', ru: '{n} очков', kk: '{n} ұпай' },
   due_date: { en: 'Due {date}', ru: 'Срок: {date}', kk: 'Мерзімі: {date}' },
   coach_name: { en: 'Coach: {name}', ru: 'Тренер: {name}', kk: 'Жаттықтырушы: {name}' },
@@ -1687,5 +1686,30 @@ export const UI: Record<string, { en: string; ru: string; kk: string }> = {
     en: 'Pass the auto check on the Code tab first — the challenge builds on a working sketch.',
     ru: 'Сначала пройди автопроверку на вкладке «Код» — испытание строится на рабочем скетче.',
     kk: 'Алдымен «Код» бетіндегі автотексерістен өт — сынақ жұмыс істейтін скетчке негізделген.',
+  },
+  server_features: { en: 'Server features', ru: 'Серверные функции', kk: 'Серверлік функциялар' },
+  what_needs_a_key_and_whether_it_has_one: {
+    en: 'What needs a key, and whether it has one',
+    ru: 'Что требует ключа и есть ли он',
+    kk: 'Не кілт талап етеді және ол бар ма',
+  },
+  configured_and_answering: { en: 'Configured and answering.', ru: 'Настроено и отвечает.', kk: 'Бапталған және жауап береді.' },
+  set_key_in_vercel_then_redeploy: {
+    en: 'Deployed, but {key} is not set. Add it in Vercel → Settings → Environment Variables, then redeploy.',
+    ru: 'Развёрнуто, но {key} не задан. Добавь его в Vercel → Settings → Environment Variables и передеплой.',
+    kk: 'Орналастырылған, бірақ {key} берілмеген. Оны Vercel → Settings → Environment Variables ішіне қосып, қайта деплой жаса.',
+  },
+  the_function_is_not_deployed_check_api_routes: {
+    en: 'Not deployed — the page answered instead of the function. Locally this is normal; on Vercel check that the api folder was included.',
+    ru: 'Не развёрнуто — вместо функции ответила страница. Локально это нормально; на Vercel проверь, что папка api попала в деплой.',
+    kk: 'Орналастырылмаған — функцияның орнына бет жауап берді. Жергілікті бұл қалыпты; Vercel-де api қалтасы деплойға кіргенін тексер.',
+  },
+  could_not_reach_it_at_all: { en: 'Could not be reached at all.', ru: 'Совсем не отвечает.', kk: 'Мүлде жауап бермейді.' },
+  checking: { en: 'Checking…', ru: 'Проверяю…', kk: 'Тексерілуде…' },
+  check_again: { en: 'Check again', ru: 'Проверить снова', kk: 'Қайта тексеру' },
+  both_fall_back_safely_the_app_works_without_them: {
+    en: 'Both fall back safely — the platform works without either, the mentor just answers from its offline base.',
+    ru: 'Обе безопасно откатываются — платформа работает и без них, наставник просто отвечает из офлайн-базы.',
+    kk: 'Екеуі де қауіпсіз шегінеді — платформа онсыз да жұмыс істейді, тәлімгер офлайн базадан жауап береді.',
   },
 }

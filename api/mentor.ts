@@ -65,6 +65,9 @@ interface Body {
 }
 
 export default async function handler(req: Request): Promise<Response> {
+  // A GET is a health check: it says whether a key is configured without spending one.
+  // Anything other than JSON coming back here means the function itself is not deployed.
+  if (req.method === 'GET') return json({ ok: true, configured: Boolean(process.env.ANTHROPIC_API_KEY), model: MODEL }, 200)
   if (req.method !== 'POST') return json({ error: 'method_not_allowed' }, 405)
 
   const key = process.env.ANTHROPIC_API_KEY

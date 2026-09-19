@@ -3,7 +3,7 @@ dist
 dist-ssr
 .vercel
 
-# local env files — VITE_MENTOR_PIN lives here, never in the repo
+# local env files — MENTOR_PIN and ANTHROPIC_API_KEY live here, never in the repo
 .env
 .env.*
 !.env.example

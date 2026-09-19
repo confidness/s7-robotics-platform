@@ -131,7 +131,7 @@ export default function Competition() {
                     </p>
                     <p className="mt-0.5 text-xs text-ink-500 italic">“{team.motto}”</p>
                   </div>
-                  <Badge tone={i === 0 ? 'warning' : 'neutral'}>{team.points} pts</Badge>
+                  <Badge tone={i === 0 ? 'warning' : 'neutral'}>{t('n_pts', { n: team.points })}</Badge>
                 </div>
 
                 <ul className="mt-4 flex-1 space-y-2">
@@ -151,7 +151,7 @@ export default function Competition() {
                 <div className="mt-4 flex items-center justify-between gap-2 border-t edge pt-4">
                   <span className="flex min-w-0 items-center gap-2 text-xs text-ink-500">
                     <Flag size={13} aria-hidden="true" />
-                    <span className="truncate">Coach: {coach?.name}</span>
+                    <span className="truncate">{t('coach_name', { name: coach?.name ?? '' })}</span>
                   </span>
                   {!mine && (
                     <Button

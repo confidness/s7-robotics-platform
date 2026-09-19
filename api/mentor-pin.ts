@@ -36,6 +36,8 @@ function sameSecret(a: string, b: string) {
 }
 
 export default async function handler(req: Request): Promise<Response> {
+  // A GET reports whether a PIN is configured — never the PIN itself.
+  if (req.method === 'GET') return json({ ok: true, configured: Boolean(process.env.MENTOR_PIN) }, 200)
   if (req.method !== 'POST') return json({ error: 'method_not_allowed' }, 405)
 
   const expected = process.env.MENTOR_PIN

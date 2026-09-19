@@ -1,10 +1,5 @@
 /// <reference types="vite/client" />
 
-interface ImportMetaEnv {
-  /** PIN that gates mentor registration. Set it in the deployment environment. */
-  readonly VITE_MENTOR_PIN?: string
-}
-
-interface ImportMeta {
-  readonly env: ImportMetaEnv
-}
+/* No app secret belongs here. Anything named VITE_* is inlined into the client bundle at build
+   time and readable in devtools, so the mentor PIN and the Anthropic key are plain server
+   environment variables, read only by the functions in api/. */

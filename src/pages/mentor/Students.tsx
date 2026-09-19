@@ -68,7 +68,7 @@ function StudentList() {
                     <p className="truncate text-sm font-bold text-ink-900">{r.user.name}</p>
                     <p className="truncate text-xs text-ink-500">{r.group?.name ?? t('no_group')}</p>
                   </div>
-                  {r.awaiting > 0 && <Badge tone="warning">{r.awaiting} to review</Badge>}
+                  {r.awaiting > 0 && <Badge tone="warning">{t('n_to_review', { n: r.awaiting })}</Badge>}
                 </div>
 
                 <dl className="mt-4 grid grid-cols-3 gap-2 text-center">
