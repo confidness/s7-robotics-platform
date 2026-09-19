@@ -33,7 +33,7 @@ const TONE: Record<Health, string> = {
   error: 'text-rose-700',
 }
 
-function Row({ label, state, keyName }: { label: string; state: Health; keyName: string }) {
+function Row({ label, state, keyName, note }: { label: string; state: Health; keyName: string; note?: string }) {
   const Icon = state === 'ready' ? CheckCircle2 : state === 'checking' ? RefreshCw : AlertTriangle
   const explain =
     state === 'ready'
@@ -53,6 +53,7 @@ function Row({ label, state, keyName }: { label: string; state: Health; keyName:
         {label}
       </p>
       <p className="mt-1 text-sm text-ink-600">{explain}</p>
+      {note && <p className="mt-1 font-mono text-xs text-ink-500">{note}</p>}
     </li>
   )
 }
@@ -77,6 +78,9 @@ async function liveTest(): Promise<string> {
     if (res.ok && data.text) return t('live_ok', { text: data.text.slice(0, 90) })
     if (res.status === 501) return t('set_key_in_vercel_then_redeploy', { key: 'ANTHROPIC_API_KEY' })
     // A 400 covers both an empty wallet and a malformed request, so the message decides, not the code.
+    // A retired free model id is OpenRouter's likeliest failure and no redeploy will fix it.
+    if (/no endpoints|not a valid model|model not found/i.test(data.detail ?? '')) return t('live_bad_model', { detail: data.detail ?? '' })
+    if (/free-models-per|rate limit/i.test(data.detail ?? '')) return t('live_rate_limited')
     if (/credit balance/i.test(data.detail ?? '')) return t('live_no_credit')
     if (/workspace/i.test(data.detail ?? '')) {
       // Set-but-still-refused and never-set read identically from here, and the fix differs:
@@ -95,6 +99,7 @@ async function liveTest(): Promise<string> {
 
 export default function ServerStatus() {
   const [mentor, setMentor] = useState<Health>('checking')
+  const [who, setWho] = useState('')
   const [pin, setPin] = useState<Health>('checking')
   const [round, setRound] = useState(0)
   const [live, setLive] = useState('')
@@ -105,6 +110,12 @@ export default function ServerStatus() {
     setMentor('checking')
     setPin('checking')
     void probe('/api/mentor').then((h) => alive && setMentor(h))
+    // Which service and model are actually configured — neither is a secret, and the model id is
+    // the thing most likely to be wrong when the provider is OpenRouter.
+    void fetch('/api/mentor')
+      .then((r) => r.json() as Promise<{ provider?: string; model?: string }>)
+      .then((d) => alive && d.provider && setWho(`${d.provider} · ${d.model ?? ''}`))
+      .catch(() => {})
     void probe('/api/mentor-pin').then((h) => alive && setPin(h))
     return () => {
       alive = false
@@ -115,7 +126,9 @@ export default function ServerStatus() {
     <>
       <SectionHeading title={t('server_features')} subtitle={t('what_needs_a_key_and_whether_it_has_one')} icon={ServerCog} />
       <ul className="mt-4 space-y-3">
-        <Row label={t('ai_robotics_mentor')} state={mentor} keyName="ANTHROPIC_API_KEY" />
+        {/* Either key works and either is a valid answer, so the prompt names both rather than
+            steering someone to open an account they do not need. */}
+        <Row label={t('ai_robotics_mentor')} state={mentor} keyName="OPENROUTER_API_KEY / ANTHROPIC_API_KEY" note={who} />
         <Row label={t('mentor_pin')} state={pin} keyName="MENTOR_PIN" />
       </ul>
       <p className="mt-3 text-xs text-ink-500">{t('both_fall_back_safely_the_app_works_without_them')}</p>

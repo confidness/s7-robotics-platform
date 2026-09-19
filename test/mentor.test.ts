@@ -158,6 +158,7 @@ async function run() {
 
   // --- the unconfigured deployment, which is the state that matters right now ------------------
   delete process.env.ANTHROPIC_API_KEY
+  delete process.env.OPENROUTER_API_KEY
   captured = null
   res = await post(ASK)
   check('no key is 501', res.status === 501, res.status)
@@ -179,6 +180,65 @@ async function run() {
   check('health never returns the workspace id itself', !JSON.stringify(health3).includes('wrkspc_test123'), health3)
   delete process.env.ANTHROPIC_WORKSPACE_ID
   check('health still never returns the key', !JSON.stringify(health2).includes('test-key-not-a-real-one'), health2)
+
+  // --- OpenRouter, which is what runs when there is no money for an Anthropic balance ----------
+  delete process.env.ANTHROPIC_API_KEY
+  process.env.OPENROUTER_API_KEY = ' or-test-key' + NL
+  const orReply = { choices: [{ message: { content: GOOD } }] }
+  stubAnthropic({ raw: orReply })
+  res = await post(ASK)
+  out = (await res.json()) as Record<string, unknown>
+  const o = captured as Captured | null
+
+  check('openrouter endpoint is used', o?.url === 'https://openrouter.ai/api/v1/chat/completions', o?.url)
+  check('key travels as a bearer token', o?.headers.authorization === 'Bearer or-test-key', o?.headers)
+  check('no anthropic headers leak across', o?.headers['x-api-key'] === undefined && o?.headers['anthropic-version'] === undefined, o?.headers)
+  check('a free model is the default', String(o?.body.model).endsWith(':free'), o?.body.model)
+
+  const orMessages = o?.body.messages as { role: string; content: string }[]
+  check('the prompt is a system turn', orMessages?.[0]?.role === 'system' && orMessages[0].content.includes('Never hand over the finished project'), orMessages?.[0]?.role)
+  check('the question is the user turn', orMessages?.[1]?.role === 'user' && orMessages[1].content === ASK.question, orMessages?.[1])
+  check('no assistant prefill is sent to openrouter', orMessages?.length === 2, orMessages?.length)
+  check('the answer comes back through choices', out.text === `Сначала проверь питание.${NL}${NL}Потом TRIG.`, out.text)
+
+  process.env.OPENROUTER_MODEL = ' openai/gpt-oss-20b:free' + NL
+  stubAnthropic({ raw: orReply })
+  await post(ASK)
+  check('the model id can be overridden', (captured as Captured | null)?.body.model === 'openai/gpt-oss-20b:free', (captured as Captured | null)?.body.model)
+  delete process.env.OPENROUTER_MODEL
+
+  // A retired free id is the likeliest OpenRouter failure, and it must name itself.
+  stubAnthropic({ status: 404, raw: { error: { message: 'No endpoints found for meta-llama/llama-3.3-70b-instruct:free.' } } })
+  out = (await (await post(ASK)).json()) as Record<string, unknown>
+  check('a retired model id is reported with its reason', out.status === 404 && String(out.detail).includes('No endpoints'), out)
+
+  // OpenRouter can answer 200 and put the failure in the body instead.
+  stubAnthropic({ raw: { error: { message: 'Rate limit exceeded: free-models-per-day' } } })
+  res = await post(ASK)
+  out = (await res.json()) as Record<string, unknown>
+  check('an error inside a 200 is still a failure', res.status === 502 && String(out.detail).includes('Rate limit'), out)
+
+  // Prose, which a free model produces far more often than Haiku does.
+  stubAnthropic({ raw: { choices: [{ message: { content: 'Проверь питание датчика.' } }] } })
+  res = await post(ASK)
+  out = (await res.json()) as Record<string, unknown>
+  check('prose from a free model is kept', res.status === 200 && String(out.text).includes('Проверь питание'), out)
+
+  const orHealth = (await (await handler(new Request('https://example.test/api/mentor', { method: 'GET' }))).json()) as Record<string, unknown>
+  check('health names the provider', orHealth.provider === 'openrouter', orHealth)
+  check('health names the model', String(orHealth.model).endsWith(':free'), orHealth)
+  check('health never returns the openrouter key', !JSON.stringify(orHealth).includes('or-test-key'), orHealth)
+
+  // Both keys set: the one added deliberately after the other failed is the one that should win.
+  process.env.ANTHROPIC_API_KEY = 'test-key-not-a-real-one'
+  stubAnthropic({ raw: orReply })
+  await post(ASK)
+  check('openrouter wins when both keys are set', Boolean((captured as Captured | null)?.url.includes('openrouter')), (captured as Captured | null)?.url)
+
+  delete process.env.OPENROUTER_API_KEY
+  stubAnthropic({ text: GOOD })
+  await post(ASK)
+  check('anthropic is used again once openrouter is removed', Boolean((captured as Captured | null)?.url.includes('anthropic')), (captured as Captured | null)?.url)
 
   // --- parseReply guards -----------------------------------------------------------------------
   check('empty text is rejected', parseReply('{"text":"   "}') === null)

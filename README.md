@@ -210,7 +210,11 @@ that demonstrates a technique is fine; a working version of the assignment is no
    that prefix would inline them into the browser bundle, which is exactly what a secret must
    not be:
    - `MENTOR_PIN` — the 8-digit PIN that gates mentor registration.
-   - `ANTHROPIC_API_KEY` — the key for the AI mentor.
+   - `OPENROUTER_API_KEY` — the key for the AI mentor. OpenRouter carries free models, so this
+     works on an account with no balance; get one at openrouter.ai/keys.
+   - `OPENROUTER_MODEL` — optional, defaults to a free model. Free ids retire without notice,
+     and a retired one is a 404 no redeploy will fix, so it is a variable rather than a constant.
+   - `ANTHROPIC_API_KEY` — an alternative to the above, used when no OpenRouter key is set.
    - `ANTHROPIC_WORKSPACE_ID` — only if that key was created at the organisation level rather
      than inside a workspace. Anthropic refuses such a key with a 400 until a workspace is
      named; **Send a test question** in Settings says so in as many words when it happens.
