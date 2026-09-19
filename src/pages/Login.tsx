@@ -10,9 +10,38 @@ import LocaleToggle from '../components/LocaleToggle'
 import { t } from '../i18n'
 import { Mark } from '../components/Mark'
 
-/** Set VITE_MENTOR_PIN in the deployment environment; the fallback only covers local runs. */
-const MENTOR_PIN = import.meta.env.VITE_MENTOR_PIN ?? '48213705'
+/**
+ * The PIN is checked by /api/mentor-pin, so the real one lives in the server environment and is
+ * never shipped to the browser. This constant is only the development fallback used when no
+ * server is there to ask — a local checkout with no environment at all.
+ */
+const DEV_PIN = '48213705'
 const PIN_LENGTH = 8
+
+/**
+ * Three outcomes, and the difference matters:
+ *   'unset'   — the deployment configured no PIN, so it is not gating mentors at all
+ *   'offline' — there was a server to ask and it could not be reached
+ *   boolean   — the server's verdict
+ *
+ * Collapsing 'offline' into 'unset' would be a hole: blocking this one request in devtools would
+ * drop the check back to a PIN that is public in the bundle.
+ */
+async function checkPin(pin: string): Promise<boolean | 'unset' | 'offline'> {
+  try {
+    const res = await fetch('/api/mentor-pin', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ pin }),
+    })
+    if (res.status === 501) return 'unset'
+    if (res.status === 429) return false
+    if (!res.ok) return 'offline'
+    return Boolean(((await res.json()) as { ok?: boolean }).ok)
+  } catch {
+    return 'offline'
+  }
+}
 
 export default function Login({ register: startOnRegister }: { register?: boolean }) {
   const { login, register, state } = useApp()
@@ -29,23 +58,38 @@ export default function Login({ register: startOnRegister }: { register?: boolea
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [busy, setBusy] = useState(false)
 
-  function onSubmit(e: FormEvent) {
+  async function onSubmit(e: FormEvent) {
     e.preventDefault()
     const next: Record<string, string> = {}
     if (!/^\S+@\S+\.\S+$/.test(email)) next.email = t('enter_a_valid_email_address')
     if (password.length < 6) next.password = t('use_at_least_6_characters')
     if (mode === 'register') {
       if (name.trim().length < 2) next.name = t('tell_us_your_name')
-      if (role === 'mentor') {
-        const entered = pin.trim()
-        if (entered.length !== PIN_LENGTH) next.pin = t('the_mentor_pin_is_n_digits', { n: PIN_LENGTH })
-        else if (entered !== MENTOR_PIN) next.pin = t('that_mentor_pin_is_not_right_ask_the_academy_lea')
-      }
+      if (role === 'mentor' && pin.trim().length !== PIN_LENGTH) next.pin = t('the_mentor_pin_is_n_digits', { n: PIN_LENGTH })
     }
     setErrors(next)
     if (Object.keys(next).length) return
 
     setBusy(true)
+
+    // The server decides. The development PIN only stands in where no server is gating at all:
+    // a local run, or a deployment that set no PIN. A reachable server that simply failed is
+    // refused rather than waved through, or blocking one request would open the gate.
+    if (mode === 'register' && role === 'mentor') {
+      const verdict = await checkPin(pin.trim())
+      const allowed =
+        verdict === 'offline'
+          ? import.meta.env.DEV && pin.trim() === DEV_PIN
+          : verdict === 'unset'
+            ? pin.trim() === DEV_PIN
+            : verdict
+      if (!allowed) {
+        setErrors({ pin: t(verdict === false ? 'that_mentor_pin_is_not_right_ask_the_academy_lea' : 'could_not_check_the_pin_try_again') })
+        setBusy(false)
+        return
+      }
+    }
+
     const result = mode === 'login' ? login(email, password) : register({ name, email, password, role })
     setBusy(false)
 

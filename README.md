@@ -13,13 +13,25 @@ students and no fake projects — the first person to open it registers the firs
 | Student | Register with name, email and password. You start on Arduino lesson one. |
 | Mentor | Register and pick **Mentor** — the form then asks for the mentor PIN. |
 
-The PIN comes from `VITE_MENTOR_PIN`, falling back to `48213705` locally. Set your own in Vercel.
+The PIN is checked by `api/mentor-pin.ts` against `MENTOR_PIN` in the server environment. There
+is deliberately no `VITE_` prefix: Vite inlines every `VITE_*` variable into the client bundle,
+so a PIN carrying one is readable in devtools. The browser posts what was typed and learns only
+yes or no.
 
-It is worth being plain about what that PIN is: Vite inlines every `VITE_*` variable into the
-client bundle at build time, so the value ends up readable in devtools no matter where it is
-configured. The PIN stops a curious student, not a determined one. Together with passwords held
-in `localStorage`, this is a local-first prototype — gating that actually holds needs a server
-to check it.
+Three outcomes, and the difference is the gate:
+
+| The server says | What happens |
+| --- | --- |
+| no PIN configured (501) | a development PIN stands in — this deployment is not gating mentors |
+| yes or no | that verdict decides |
+| nothing at all | refused, in a production build |
+
+Collapsing the last case into the first would be the hole: blocking one request in devtools
+would drop the check back to a PIN that ships in the bundle. So a build that cannot reach its
+server fails closed, and `npm run preview` cannot register a mentor — it serves a production
+bundle with no functions behind it. `npm run dev` can.
+
+Passwords still sit in `localStorage` in plain text. That part is still a prototype.
 
 ## The loop
 
