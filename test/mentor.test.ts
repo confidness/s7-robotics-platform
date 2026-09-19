@@ -171,6 +171,13 @@ async function run() {
   process.env.ANTHROPIC_API_KEY = 'test-key-not-a-real-one'
   const health2 = (await (await handler(new Request('https://example.test/api/mentor', { method: 'GET' }))).json()) as Record<string, unknown>
   check('health reports a configured key', health2.configured === true, health2)
+  check('health reports no workspace id when unset', health2.workspace === false, health2)
+
+  process.env.ANTHROPIC_WORKSPACE_ID = 'wrkspc_test123'
+  const health3 = (await (await handler(new Request('https://example.test/api/mentor', { method: 'GET' }))).json()) as Record<string, unknown>
+  check('health reports a configured workspace id', health3.workspace === true, health3)
+  check('health never returns the workspace id itself', !JSON.stringify(health3).includes('wrkspc_test123'), health3)
+  delete process.env.ANTHROPIC_WORKSPACE_ID
   check('health still never returns the key', !JSON.stringify(health2).includes('test-key-not-a-real-one'), health2)
 
   // --- parseReply guards -----------------------------------------------------------------------

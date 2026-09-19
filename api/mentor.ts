@@ -67,7 +67,18 @@ interface Body {
 export default async function handler(req: Request): Promise<Response> {
   // A GET is a health check: it says whether a key is configured without spending one.
   // Anything other than JSON coming back here means the function itself is not deployed.
-  if (req.method === 'GET') return json({ ok: true, configured: Boolean(process.env.ANTHROPIC_API_KEY), model: MODEL }, 200)
+  if (req.method === 'GET')
+    return json(
+      {
+        ok: true,
+        configured: Boolean(process.env.ANTHROPIC_API_KEY?.trim()),
+        // Whether one is set, never what it is. It separates "the variable never arrived" from
+        // "it arrived and Anthropic still refuses it", which need different things done to them.
+        workspace: Boolean(process.env.ANTHROPIC_WORKSPACE_ID?.trim()),
+        model: MODEL,
+      },
+      200,
+    )
   if (req.method !== 'POST') return json({ error: 'method_not_allowed' }, 405)
 
   // Trimmed for the same reason as the workspace id: a value pasted into a dashboard field
