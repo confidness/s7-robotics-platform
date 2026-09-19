@@ -1676,4 +1676,6 @@ export const UI: Record<string, { en: string; ru: string; kk: string }> = {
     kk: 'Тақтаның USB арқылы не басып шығаратынын қара. Скетчті жүктеу бұрынғыша Arduino IDE арқылы.',
   },
   clear_output: { en: 'Clear', ru: 'Очистить', kk: 'Тазалау' },
+  answered_by_the_model: { en: 'Answered by the model', ru: 'Ответила модель', kk: 'Модель жауап берді' },
+  answered_offline: { en: 'Answered offline', ru: 'Ответ из офлайн-базы', kk: 'Офлайн базадан жауап' },
 }

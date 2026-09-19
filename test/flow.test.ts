@@ -21,6 +21,7 @@ import { createInitialState } from '../src/lib/seed'
 import * as logic from '../src/lib/logic'
 import { currentLesson, isLessonUnlocked, mentorStats, profileOf } from '../src/lib/selectors'
 import { levelFor } from '../src/lib/gamification'
+import { parseReply } from '../api/mentor'
 import { runChecks } from '../src/lib/codecheck'
 
 let state = createInitialState()
@@ -169,4 +170,24 @@ ls = logic.deleteCustomLesson(ls, 'cl-3')
 assert.ok(!ls.customLessons.some((l) => l.id === 'cl-3'))
 assert.ok(!ls.lessonSubmissions.some((s) => s.lessonId === 'cl-3'), 'answers do not outlive their lesson')
 
-console.log('✓ empty install, registration, progress chain, code check, levels and mentor lessons all behave')
+// --- the model reply parser -------------------------------------------------------------------------
+// The one fragile seam in the AI path: a model that wraps its JSON, or drops a field, must not
+// cost the student an answer — and junk must fall through to the offline base rather than render.
+const clean = parseReply('{"text":"Check the ground wire.","question":"Is it unbroken?","followUps":["Why ground?"],"code":null}')
+assert.equal(clean?.text, 'Check the ground wire.')
+assert.equal(clean?.followUps.length, 1)
+assert.equal(clean?.code, undefined)
+
+const NL = String.fromCharCode(10)
+const fenced = parseReply(['Here you go:', '```json', '{"text":"Use millis().","question":"Why?","followUps":[]}', '```'].join(NL))
+assert.equal(fenced?.text, 'Use millis().', 'a fenced or prefaced reply is still read')
+
+const partial = parseReply('{"text":"Only this."}')
+assert.equal(partial?.question, '', 'a missing question does not throw')
+assert.equal(partial?.followUps.length, 0)
+
+assert.equal(parseReply('sorry, I cannot do that'), null, 'prose with no JSON falls back')
+assert.equal(parseReply('{"question":"no text"}'), null, 'an answer with no text falls back')
+assert.equal(parseReply('{"text":"x","code":{"source":"   "}}')?.code, undefined, 'a blank snippet is dropped')
+
+console.log('✓ empty install, registration, progress chain, code check, levels, mentor lessons and the model parser all behave')

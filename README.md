@@ -172,10 +172,22 @@ member; catalog filters, gallery filters and course cards pick it up with no fur
 
 ### AI mentor
 
-`askMentor(question, context)` in `ai.ts` is the only thing the UI knows about. A local
-knowledge base answers it today with hints, explanations, a guiding question and small code
-fragments — and it refuses to write the student's project. Pointing it at a real model is
-replacing that function body with a `fetch`; the signature and the UI stay as they are.
+`askMentor(question, context)` in `ai.ts` is the only thing the UI knows about, and it has two
+brains behind it.
+
+When `ANTHROPIC_API_KEY` is set, `api/mentor.ts` answers — a Vercel function calling Claude
+Haiku 4.5. **The key lives only in the server's environment.** There is deliberately no `VITE_`
+prefix: anything with one is inlined into the client bundle and readable in devtools, which is
+exactly what must not happen to an API key. The browser sends a question and receives an answer;
+it never sees a credential.
+
+Without a key — or on a rate limit, a timeout, an outage, or a reply that will not parse — the
+built-in knowledge base answers instead, with the same shape and the same teaching rule. The
+student never sees an error where a hint belongs, and each reply says which brain produced it.
+
+The teaching rule is the point, and it is stated in the system prompt as a rule rather than a
+preference: hint, explain, ask back, and refuse to hand over the finished project. A fragment
+that demonstrates a technique is fine; a working version of the assignment is not.
 
 ## Deploying to Vercel
 

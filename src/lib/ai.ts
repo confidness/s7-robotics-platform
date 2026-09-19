@@ -1,4 +1,5 @@
 import { localizeAi, type AiEntryText } from '../i18n/ai'
+import { getLocale } from '../i18n'
 
 /**
  * AI Robotics Mentor — reply layer.
@@ -28,6 +29,8 @@ export interface AiReply {
   code?: { language: string; source: string; caption: string }
   question?: string
   followUps: string[]
+  /** Whether a model answered, or the offline knowledge base did. Shown next to the reply. */
+  fromModel?: boolean
 }
 
 interface Entry {
@@ -228,7 +231,49 @@ const FALLBACK: AiEntryText = {
 
 let counter = 0
 
-export function askMentor(question: string, ctx: AskContext = {}): Promise<AiReply> {
+/** How long to wait for the model before falling back — a stuck student will not sit through more. */
+const MODEL_TIMEOUT_MS = 12_000
+
+/** Set once the endpoint answers 501, so an unconfigured deployment stops retrying every question. */
+let modelOffline = false
+
+/**
+ * Asks the server-side model. Returns null on anything at all — no key configured, rate limit,
+ * offline, slow — and the caller falls back to the local knowledge base. The student should never
+ * see an error where a hint belongs.
+ */
+async function askModel(question: string, ctx: AskContext): Promise<Omit<AiReply, 'id'> | null> {
+  if (modelOffline) return null
+  const abort = new AbortController()
+  const timer = setTimeout(() => abort.abort(), MODEL_TIMEOUT_MS)
+  try {
+    const res = await fetch('/api/mentor', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      signal: abort.signal,
+      body: JSON.stringify({
+        question,
+        locale: getLocale(),
+        lessonTitle: ctx.lessonTitle,
+        courseTitle: ctx.courseTitle,
+        code: ctx.code,
+      }),
+    })
+    if (res.status === 501) {
+      modelOffline = true
+      return null
+    }
+    if (!res.ok) return null
+    const data = (await res.json()) as Omit<AiReply, 'id'>
+    return data?.text ? data : null
+  } catch {
+    return null
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+export function askMentorLocal(question: string, ctx: AskContext = {}): Promise<AiReply> {
   const entry = KB.find((e) => e.match.test(question))
   const lesson = ctx.lessonTitle ?? ''
   const vars = { name: ctx.studentName?.split(' ')[0] ?? '', lesson }
@@ -251,6 +296,16 @@ export function askMentor(question: string, ctx: AskContext = {}): Promise<AiRep
   }
   // Latency is deliberate: the UI has to handle a pending state, exactly as it would with a real model.
   return new Promise((resolve) => setTimeout(() => resolve(reply), 620 + Math.random() * 520))
+}
+
+/**
+ * What the UI calls. The model answers when one is configured and reachable; otherwise the local
+ * base does, with the same shape and the same teaching rule. Neither path can fail visibly.
+ */
+export async function askMentor(question: string, ctx: AskContext = {}): Promise<AiReply> {
+  const fromModel = await askModel(question, ctx)
+  if (fromModel) return { ...fromModel, id: `ai-${++counter}-${Date.now()}`, fromModel: true }
+  return askMentorLocal(question, ctx)
 }
 
 /** Keys into the UI dictionary — the prompts are translated at render time, like every other label. */

@@ -104,6 +104,11 @@ export default function AiMentorPanel({ context, height = 'h-[32rem]' }: { conte
               <div className="min-w-0 max-w-[85%] space-y-3">
                 <div className="rounded-2xl rounded-tl-sm fill px-3.5 py-3">
                   <RichText text={m.text} />
+                  {/* Which brain answered. Useful when the key is missing and the offline base steps in. */}
+                  <p className="mt-2 flex items-center gap-1 text-[11px] font-medium text-ink-500">
+                    <Sparkles size={10} aria-hidden="true" />
+                    {m.reply?.fromModel ? t('answered_by_the_model') : t('answered_offline')}
+                  </p>
                 </div>
                 {m.reply?.code && (
                   <div>
