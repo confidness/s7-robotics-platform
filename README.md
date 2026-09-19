@@ -3,16 +3,6 @@
 One system for teaching robotics: courses, interactive lessons, project submission, mentor
 review, progress, gamification, an AI mentor and competitions.
 
-**Learn → Build → Submit → Get feedback → Improve → Compete.**
-
-```bash
-npm install
-npm run dev      # http://localhost:5173
-npm run build    # type-check + production bundle
-npm run preview  # serve the build
-npm run check    # self-check over the register → submit → approve → XP → unlock chain
-```
-
 ## First run
 
 The platform ships with curriculum, not with people. There are no seeded accounts, no sample
