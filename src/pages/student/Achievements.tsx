@@ -52,7 +52,7 @@ export default function Achievements() {
       </header>
 
       <Card className="overflow-hidden">
-        <div className="tint-violet specular relative flex flex-wrap items-center gap-6 p-6">
+        <div className="tint-accent specular relative flex flex-wrap items-center gap-6 p-6">
           <Ring value={lv.percent} size={96}>
             <span className="text-center">
               <span className="block text-xl leading-none font-bold text-ink-900">{lv.level.index}</span>

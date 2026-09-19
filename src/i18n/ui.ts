@@ -1199,4 +1199,8 @@ export const UI: Record<string, { en: string; ru: string; kk: string }> = {
   title_marked_complete: { en: '“{title}” is marked complete', ru: '«{title}» отмечается пройденным', kk: '«{title}» аяқталды деп белгіленеді' },
   title_unlocks: { en: '“{title}” unlocks', ru: '«{title}» открывается', kk: '«{title}» ашылады' },
   challenge_title: { en: 'Challenge · {title}', ru: 'Испытание · {title}', kk: 'Сынақ · {title}' },
+  xp_added_to_your_total: { en: '+{n} XP added to your total.', ru: '+{n} XP добавлено к общему счёту.', kk: 'Жалпы есепке +{n} XP қосылды.' },
+  n_waiting_for_review: { en: '{n} waiting for review', ru: 'Ждут проверки: {n}', kk: 'Тексеруді күтуде: {n}' },
+  wiring_diagram_label: { en: 'Wiring diagram: {rows}', ru: 'Схема подключения: {rows}', kk: 'Қосылу сұлбасы: {rows}' },
+  from_to_pair: { en: '{from} to {to}', ru: '{from} — {to}', kk: '{from} — {to}' },
 }

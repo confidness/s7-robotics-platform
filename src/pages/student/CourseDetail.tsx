@@ -40,9 +40,9 @@ export default function CourseDetail() {
           <div className="absolute inset-0 flex items-end p-5 sm:p-6">
             <div className="text-white">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="rounded-lg bg-black/25 px-2.5 py-1 text-xs font-bold backdrop-blur-sm">{platform.name}</span>
+                <span className="rounded-lg bg-black/40 px-2.5 py-1 text-xs font-bold backdrop-blur-sm">{platform.name}</span>
                 <span className="rounded-lg fill-strong px-2.5 py-1 text-xs font-bold text-ink-800">{localizeDifficulty(course.level)}</span>
-                <span className="rounded-lg bg-black/25 px-2.5 py-1 text-xs font-bold backdrop-blur-sm">{course.ageRange}</span>
+                <span className="rounded-lg bg-black/40 px-2.5 py-1 text-xs font-bold backdrop-blur-sm">{course.ageRange}</span>
               </div>
               <h1 className="mt-3 text-2xl font-bold tracking-[-0.03em] drop-shadow sm:text-3xl">{course.title}</h1>
             </div>
@@ -178,7 +178,7 @@ export default function CourseDetail() {
                           <span className="flex flex-wrap items-center gap-2">
                             <span className="text-sm font-bold text-ink-900">{lesson.title}</span>
                             {isNext && <Badge tone="brand">{t('next_up')}</Badge>}
-                            {lesson.requiresProject && <Badge tone="violet">{t('project')}</Badge>}
+                            {lesson.requiresProject && <Badge tone="accent">{t('project')}</Badge>}
                           </span>
                           <span className="mt-0.5 block truncate text-xs text-ink-500">{lesson.summary}</span>
                         </span>

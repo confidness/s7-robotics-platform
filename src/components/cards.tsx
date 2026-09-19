@@ -34,7 +34,7 @@ export function CourseCard({ course, progress, instructor }: { course: Course; p
       <Link to={`/courses/${course.id}`} className="flex flex-1 flex-col focus-visible:outline-none">
         <CourseCover course={course} className="h-28 sm:h-32">
           <div className="absolute inset-0 flex items-end justify-between p-4">
-            <span className="rounded-lg bg-black/25 px-2.5 py-1 text-xs font-bold text-white backdrop-blur-sm">{platform.name}</span>
+            <span className="rounded-lg bg-black/40 px-2.5 py-1 text-xs font-bold text-white backdrop-blur-sm">{platform.name}</span>
             <span className="rounded-lg fill-strong px-2.5 py-1 text-xs font-bold text-ink-800">{localizeDifficulty(course.level)}</span>
           </div>
         </CourseCover>
@@ -154,7 +154,7 @@ export function ActivityChart({ data, height = 120 }: { data: { label: string; v
           </div>
         ))}
       </div>
-      <div className="mt-2 flex justify-between text-[10px] font-medium text-ink-400">
+      <div className="mt-2 flex justify-between text-[10px] font-medium text-ink-500">
         <span>{data[0] ? formatDate(data[0].date, { day: 'numeric', month: 'short' }) : ''}</span>
         <span>{t('today')}</span>
       </div>

@@ -74,7 +74,7 @@ export function SectionHeading({ title, subtitle, action, icon: Icon }: { title:
 
 /* ------------------------------------------------------------------ badges */
 
-export type Tone = 'neutral' | 'brand' | 'success' | 'warning' | 'danger' | 'violet' | 'cyan'
+export type Tone = 'neutral' | 'brand' | 'success' | 'warning' | 'danger' | 'accent' | 'cyan'
 
 const TONES: Record<Tone, string> = {
   neutral: 'fill text-ink-600 rim',
@@ -82,7 +82,7 @@ const TONES: Record<Tone, string> = {
   success: 'bg-emerald-100/80 text-emerald-800 rim',
   warning: 'bg-amber-100/85 text-amber-800 rim',
   danger: 'bg-rose-100/80 text-rose-800 rim',
-  violet: 'bg-violet-100/80 text-violet-800 rim',
+  accent: 'bg-accent-100/80 text-accent-800 rim',
   cyan: 'bg-cyan-100/80 text-cyan-800 rim',
 }
 
@@ -114,12 +114,12 @@ export const STATUS_LABEL = {
 
 /* ------------------------------------------------------------------ progress */
 
-export function ProgressBar({ value, tone = 'brand', size = 'md', label }: { value: number; tone?: 'brand' | 'success' | 'amber' | 'violet'; size?: 'sm' | 'md' | 'lg'; label?: string }) {
+export function ProgressBar({ value, tone = 'brand', size = 'md', label }: { value: number; tone?: 'brand' | 'success' | 'amber' | 'accent'; size?: 'sm' | 'md' | 'lg'; label?: string }) {
   const fills = {
     brand: 'bg-gradient-to-r from-brand-400 to-accent-500',
     success: 'bg-gradient-to-r from-emerald-400 to-teal-500',
     amber: 'bg-gradient-to-r from-amber-400 to-orange-500',
-    violet: 'bg-gradient-to-r from-accent-400 to-fuchsia-500',
+    accent: 'bg-gradient-to-r from-accent-400 to-accent-700',
   }
   const heights = { sm: 'h-1.5', md: 'h-2.5', lg: 'h-3.5' }
   const clamped = Math.max(0, Math.min(100, Math.round(value)))

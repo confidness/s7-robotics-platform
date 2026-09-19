@@ -32,10 +32,10 @@ export default function Competition() {
   return (
     <div className="animate-rise space-y-6">
       <Card className="overflow-hidden">
-        <div className="tint-violet specular relative p-6 sm:p-8">
+        <div className="tint-accent specular relative p-6 sm:p-8">
           <div className="relative flex flex-wrap items-end justify-between gap-5">
             <div>
-              <span className="inline-flex items-center gap-1.5 rounded-full fill-strong px-3 py-1 text-xs font-bold text-accent-700 dark:text-accent-300">
+              <span className="inline-flex items-center gap-1.5 rounded-full fill-strong px-3 py-1 text-xs font-bold text-accent-700">
                 <Trophy size={13} aria-hidden="true" /> {competition.season}
               </span>
               <h1 className="mt-3 text-[28px] leading-tight font-bold tracking-[-0.03em] text-ink-900 sm:text-[34px]">{competition.name}</h1>
@@ -144,7 +144,7 @@ export default function Competition() {
               const mine = team?.memberIds.includes(user.id)
               return (
                 <Card key={task.id} className="flex flex-wrap items-start gap-4 p-5">
-                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-violet-50 text-violet-600 ring-1 ring-violet-200 ring-inset">
+                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-accent-50 text-accent-700 ring-1 ring-accent-200 ring-inset">
                     <Target size={18} aria-hidden="true" />
                   </span>
                   <div className="min-w-[14rem] flex-1">

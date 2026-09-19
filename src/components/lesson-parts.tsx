@@ -124,7 +124,7 @@ export function WiringDiagram({ rows, boardLabel = 'Arduino Uno' }: { rows: Wiri
 
   return (
     <div className="overflow-x-auto">
-      <svg viewBox={`0 0 760 ${height}`} className="mx-auto w-full min-w-[620px] max-w-[760px]" role="img" aria-label={`Wiring diagram: ${rows.map((r) => `${r.from} to ${r.to}`).join('; ')}`}>
+      <svg viewBox={`0 0 760 ${height}`} className="mx-auto w-full min-w-[620px] max-w-[760px]" role="img" aria-label={t('wiring_diagram_label', { rows: rows.map((r) => t('from_to_pair', { from: r.from, to: r.to })).join('; ') })}>
         <rect x="0" y="0" width="760" height={height} rx="16" fill="#0B1120" />
         <g opacity="0.3">
           {Array.from({ length: 26 }, (_, i) => (

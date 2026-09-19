@@ -194,11 +194,11 @@ export default function ReviewDetail() {
                     ))}
                   </ul>
                 </div>
-                <div className="rounded-xl border border-violet-200 bg-violet-50/60 p-4">
-                  <p className="flex items-center gap-1.5 text-xs font-bold text-violet-800">
+                <div className="rounded-xl border border-accent-200 bg-accent-50/60 p-4">
+                  <p className="flex items-center gap-1.5 text-xs font-bold text-accent-800">
                     <Trophy size={13} aria-hidden="true" /> {t('challenge_title', { title: lesson.challenge.title })}
                   </p>
-                  <p className="mt-1.5 text-sm leading-relaxed text-violet-900">{lesson.challenge.brief}</p>
+                  <p className="mt-1.5 text-sm leading-relaxed text-accent-800">{lesson.challenge.brief}</p>
                 </div>
               </div>
             </Card>

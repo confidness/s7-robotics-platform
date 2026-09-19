@@ -156,10 +156,10 @@ export default function Dashboard() {
 
       {/* stats */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatTile label={t('experience')} value={formatNumber(profile.xp)} sub={lv.next ? t('xp_to_level', { n: lv.xpToNext, level: localizeLevelName(lv.next.name) }) : t('highest_level')} icon={Zap} tone="warning" />
-        <StatTile label={t('day_streak')} value={`${profile.streak}`} sub={profile.streak >= 7 ? t('streak_achievement_unlocked') : t('days_to_streak_badge', { n: 7 - profile.streak })} icon={Flame} tone="danger" />
-        <StatTile label={t('projects_approved')} value={approved} sub={pending.length ? `${pending.length} waiting for review` : t('nothing_pending')} icon={CheckCircle2} tone="success" />
-        <StatTile label={t('achievements')} value={`${unlocked.length}/${state.achievements.length}`} sub={t('unlocked_so_far')} icon={Award} tone="violet" />
+        <StatTile label={t('experience')} value={formatNumber(profile.xp)} sub={lv.next ? t('xp_to_level', { n: lv.xpToNext, level: localizeLevelName(lv.next.name) }) : t('highest_level')} icon={Zap} tone="brand" />
+        <StatTile label={t('day_streak')} value={`${profile.streak}`} sub={profile.streak >= 7 ? t('streak_achievement_unlocked') : t('days_to_streak_badge', { n: 7 - profile.streak })} icon={Flame} tone="accent" />
+        <StatTile label={t('projects_approved')} value={approved} sub={pending.length ? t('n_waiting_for_review', { n: pending.length }) : t('nothing_pending')} icon={CheckCircle2} tone="success" />
+        <StatTile label={t('achievements')} value={`${unlocked.length}/${state.achievements.length}`} sub={t('unlocked_so_far')} icon={Award} tone="brand" />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
@@ -305,7 +305,7 @@ export default function Dashboard() {
 
           {/* ai mentor */}
           <Card className="overflow-hidden">
-            <div className="tint-violet relative p-5">
+            <div className="tint-accent relative p-5">
               <span className="grid h-11 w-11 place-items-center rounded-[14px] fill-strong shadow-[var(--shadow-soft)]">
                 <Bot size={20} className="text-accent-600" aria-hidden="true" />
               </span>

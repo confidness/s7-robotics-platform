@@ -12,6 +12,7 @@ import ThemeToggle from './ThemeToggle'
 import LocaleToggle from './LocaleToggle'
 import type { LucideIcon } from 'lucide-react'
 import { t, formatNumber, formatDate } from '../i18n'
+import { Mark } from './Mark'
 import { localizeLevelName } from '../i18n/content'
 
 interface NavItem {
@@ -52,9 +53,7 @@ const MENTOR_NAV: NavItem[] = [
 export function Logo({ compact }: { compact?: boolean }) {
   return (
     <span className="flex items-center gap-2.5">
-      <span className="grid h-10 w-10 place-items-center rounded-[14px] bg-gradient-to-b from-brand-400 to-accent-500 text-white shadow-[0_8px_18px_-8px_rgb(47_107_240/0.8)]">
-        <Bot size={20} aria-hidden="true" />
-      </span>
+      <Mark size={40} className="shrink-0 rounded-full shadow-[0_8px_18px_-8px_rgb(21_96_236/0.7)]" />
       {!compact && (
         <span className="leading-tight">
           <span className="block text-[15px] font-bold tracking-[-0.02em] text-ink-900">{t('s7_robotics')}</span>
@@ -293,9 +292,7 @@ export default function Layout() {
               <Menu size={18} aria-hidden="true" />
             </button>
             <Link to={user?.role === 'mentor' ? '/m' : '/'} className="lg:hidden">
-              <span className="grid h-9 w-9 place-items-center rounded-[13px] bg-gradient-to-b from-brand-400 to-accent-500 text-white">
-                <Bot size={18} aria-hidden="true" />
-              </span>
+              <Mark size={36} className="rounded-full" />
             </Link>
             <span className="relative hidden pl-2 lg:block">
               <Badge tone="brand" icon={Sparkles}>

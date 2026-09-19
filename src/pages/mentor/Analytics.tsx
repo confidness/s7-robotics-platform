@@ -105,7 +105,7 @@ export default function MentorAnalytics() {
         <StatTile label={t('students')} value={roster.length} sub={t('active_this_week_count', { n: activeWeek })} icon={Users} tone="brand" />
         <StatTile label={t('xp_awarded')} value={formatNumber(totalXp)} sub={t('across_all_courses')} icon={TrendingUp} tone="warning" />
         <StatTile label={t('projects_approved')} value={approved} sub={t('approval_rate', { n: approvalRate })} icon={CheckCircle2} tone="success" />
-        <StatTile label={t('lessons_completed')} value={byCourse.reduce((a, b) => a + b.completed, 0)} sub={t('total_across_academy')} icon={Activity} tone="violet" />
+        <StatTile label={t('lessons_completed')} value={byCourse.reduce((a, b) => a + b.completed, 0)} sub={t('total_across_academy')} icon={Activity} tone="accent" />
       </div>
 
       <div className="grid gap-5 lg:grid-cols-2">

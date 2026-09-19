@@ -61,6 +61,11 @@ phones). The choice is stored per browser and applied before first paint, so the
 Every colour is a token in `src/index.css`: `[data-theme='dark']` swaps the ink ramp, thins the
 glass and retints the pale surfaces. Components never hardcode a literal white.
 
+The palette is white, the logo's blue and a deep green: `brand` is the blue ramp built around
+the mark's own `#1560ec`, `accent` is the green that ends every gradient, and the five courses
+sit at five points along the run between them. Amber, rose and emerald survive only as status —
+a warning has to look like a warning — and never as decoration.
+
 ## Architecture
 
 ```
@@ -87,6 +92,7 @@ src/
     lessons.kk.ts   the same, in Kazakh
     ai.ru.ts        AI mentor answers; ai.kk.ts is its Kazakh twin
   components/       design system (ui.tsx), layout chrome, code editor, lesson parts, cards
+    Mark.tsx        the S7 mark, drawn as two arcs so it stays crisp at 20px
   pages/            student/* and mentor/* screens, one file per screen
 ```
 

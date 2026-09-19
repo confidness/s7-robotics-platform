@@ -115,8 +115,8 @@ export function MentorCompetition() {
   return (
     <div className="animate-rise space-y-6">
       <Card className="overflow-hidden">
-        <div className="tint-violet specular relative p-6 sm:p-8">
-          <span className="inline-flex items-center gap-1.5 rounded-full fill-strong px-3 py-1 text-xs font-bold text-accent-700 dark:text-accent-300">
+        <div className="tint-accent specular relative p-6 sm:p-8">
+          <span className="inline-flex items-center gap-1.5 rounded-full fill-strong px-3 py-1 text-xs font-bold text-accent-700">
             <Trophy size={13} aria-hidden="true" /> {competition.season}
           </span>
           <h1 className="mt-3 text-[28px] leading-tight font-bold tracking-[-0.03em] text-ink-900 sm:text-[34px]">{competition.name}</h1>

@@ -412,7 +412,7 @@ function LessonPage() {
         <div className="grid gap-4 lg:grid-cols-[1.5fr_1fr]">
           <Card className="p-5 sm:p-6">
             <div className="flex flex-wrap items-center gap-2">
-              <Badge tone="violet" icon={ListChecks}>
+              <Badge tone="accent" icon={ListChecks}>
                 {t('task')}
               </Badge>
               <Badge tone="warning" icon={Zap}>
@@ -498,7 +498,7 @@ function LessonPage() {
       {/* ------------------------------------------------------------ challenge */}
       {section === 'challenge' && (
         <Card className="overflow-hidden">
-          <div className="bg-gradient-to-br from-violet-600 to-fuchsia-600 p-5 text-white sm:p-6">
+          <div className="bg-gradient-to-br from-accent-600 to-brand-700 p-5 text-white sm:p-6">
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 text-xs font-bold backdrop-blur-sm">
                 <Trophy size={12} aria-hidden="true" />{t('challenge')}</span>
@@ -506,7 +506,7 @@ function LessonPage() {
                 <Zap size={12} aria-hidden="true" /> +{lesson.challenge.xp} XP
               </span>
               {challengeDone && (
-                <span className="inline-flex items-center gap-1.5 rounded-full fill-strong px-2.5 py-1 text-xs font-bold text-violet-700">
+                <span className="inline-flex items-center gap-1.5 rounded-full fill-strong px-2.5 py-1 text-xs font-bold text-accent-700">
                   <CheckCircle2 size={12} aria-hidden="true" />{t('completed')}</span>
               )}
             </div>
@@ -539,7 +539,7 @@ function LessonPage() {
                 disabled={challengeDone}
                 onClick={() => {
                   completeChallenge(lesson.id)
-                  toast({ title: t('challenge_complete'), body: `+${lesson.challenge.xp} XP added to your total.`, tone: 'success' })
+                  toast({ title: t('challenge_complete'), body: t('xp_added_to_your_total', { n: lesson.challenge.xp }), tone: 'success' })
                 }}
               >
                 {challengeDone ? t('challenge_completed') : t('mark_challenge_as_complete')}

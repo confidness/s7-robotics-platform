@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowRight, Bot, KeyRound, ShieldCheck } from 'lucide-react'
+import { ArrowRight, KeyRound, ShieldCheck } from 'lucide-react'
 import { useApp, useToast } from '../lib/store'
 import { LESSONS } from '../lib/curriculum'
 import { Button, Field, inputClass } from '../components/ui'
@@ -8,6 +8,7 @@ import { Logo } from '../components/Layout'
 import ThemeToggle from '../components/ThemeToggle'
 import LocaleToggle from '../components/LocaleToggle'
 import { t } from '../i18n'
+import { Mark } from '../components/Mark'
 
 /** Set VITE_MENTOR_PIN in the deployment environment; the fallback only covers local runs. */
 const MENTOR_PIN = import.meta.env.VITE_MENTOR_PIN ?? '4821'
@@ -97,9 +98,7 @@ export default function Login({ register: startOnRegister }: { register?: boolea
         <div className="card specular relative w-full max-w-md p-6 sm:p-8">
           <div className="relative mb-7 lg:hidden">
             <span className="inline-flex items-center gap-2.5">
-              <span className="grid h-10 w-10 place-items-center rounded-[14px] bg-gradient-to-b from-brand-400 to-accent-500 text-white">
-                <Bot size={20} aria-hidden="true" />
-              </span>
+              <Mark size={40} className="rounded-full" />
               <span className="text-lg font-bold tracking-[-0.02em] text-ink-900">{t('s7_robotics')}</span>
             </span>
           </div>

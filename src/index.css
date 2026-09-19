@@ -33,26 +33,34 @@
   --color-ink-900: #0f1724;
   --color-ink-950: #0a0f19;
 
-  /* System blue, warmed a touch so it sits well on porcelain. */
-  --color-brand-50: #eff5ff;
-  --color-brand-100: #dbe8ff;
-  --color-brand-200: #bed7ff;
-  --color-brand-300: #93bcff;
-  --color-brand-400: #619bff;
-  --color-brand-500: #3b7bff;
-  --color-brand-600: #2b62db;
-  --color-brand-700: #2557cc;
-  --color-brand-800: #1f47a5;
+  /* The logo blue, as a ramp. 500 is the mark's own #1560ec; 600 is a notch deeper because
+     it carries link text and has to clear AA on pale glass, where 500 would not. */
+  --color-brand-50: #eef4ff;
+  --color-brand-100: #d9e6ff;
+  --color-brand-200: #b9d1ff;
+  --color-brand-300: #8bb2ff;
+  --color-brand-400: #5a8dff;
+  --color-brand-500: #1560ec;
+  --color-brand-600: #1050d8;
+  --color-brand-700: #0d43b4;
+  --color-brand-800: #0b368f;
 
   /* Amber and emerald text sit on pale glass, so 600 is darkened past Tailwind's
      defaults (2.8:1 and 3.8:1 on that surface) to clear AA. */
   --color-amber-600: #92400e;
   --color-emerald-600: #047857;
 
-  /* Indigo companion — the second stop in every accent gradient. */
-  --color-accent-400: #a78bfa;
-  --color-accent-500: #8b5cf6;
-  --color-accent-600: #7c3aed;
+  /* Deep green companion — the second stop in every accent gradient. Blue runs into it
+     through teal, which is why the ramp leans slightly cool rather than grassy. */
+  --color-accent-50: #eaf7f0;
+  --color-accent-100: #d3efe0;
+  --color-accent-200: #aadfc5;
+  --color-accent-300: #6ee7a8;
+  --color-accent-400: #2f9e6b;
+  --color-accent-500: #157a50;
+  --color-accent-600: #0f5c3c;
+  --color-accent-700: #0b4a31;
+  --color-accent-800: #093524;
 
   /* Concentric radii. */
   --radius-glass: 26px;
@@ -71,12 +79,12 @@
   --edge: rgb(255 255 255 / 0.7);
   --divider: rgb(255 255 255 / 0.6);
   --tint-blue: linear-gradient(152deg, rgb(190 215 255 / 0.92), rgb(255 255 255 / 0.5));
-  --tint-violet: linear-gradient(152deg, rgb(216 203 255 / 0.9), rgb(255 255 255 / 0.5));
+  --tint-accent: linear-gradient(152deg, rgb(183 231 208 / 0.9), rgb(255 255 255 / 0.5));
   --tint-mint: linear-gradient(152deg, rgb(186 242 220 / 0.9), rgb(255 255 255 / 0.5));
   --aurora-1: rgb(96 158 255 / 0.78);
-  --aurora-2: rgb(160 124 255 / 0.66);
-  --aurora-3: rgb(94 222 189 / 0.6);
-  --aurora-4: rgb(255 184 138 / 0.42);
+  --aurora-2: rgb(62 170 122 / 0.5);
+  --aurora-3: rgb(120 214 180 / 0.55);
+  --aurora-4: rgb(150 190 255 / 0.44);
 
   /* Code keeps its own dark palette in both themes — an editor is always a dark instrument. */
   --code-bg: #0b1120;
@@ -106,11 +114,11 @@
   --color-ink-800: #e2e9f3;
   --color-ink-900: #f3f7fc;
 
-  --color-brand-50: #10203c;
-  --color-brand-100: #172c50;
-  --color-brand-200: #1f3d6e;
-  --color-brand-700: #9cc0ff;
-  --color-brand-800: #c2d8ff;
+  --color-brand-50: #0e1c36;
+  --color-brand-100: #152746;
+  --color-brand-200: #1c3665;
+  --color-brand-700: #9dc0ff;
+  --color-brand-800: #c4daff;
 
   --glass-card: linear-gradient(152deg, rgb(255 255 255 / 0.1), rgb(255 255 255 / 0.05));
   --glass-chrome: linear-gradient(160deg, rgb(255 255 255 / 0.11), rgb(255 255 255 / 0.05));
@@ -123,15 +131,21 @@
   --edge: rgb(255 255 255 / 0.13);
   --divider: rgb(255 255 255 / 0.09);
   --tint-blue: linear-gradient(152deg, rgb(56 104 190 / 0.5), rgb(255 255 255 / 0.05));
-  --tint-violet: linear-gradient(152deg, rgb(112 84 200 / 0.48), rgb(255 255 255 / 0.05));
+  --tint-accent: linear-gradient(152deg, rgb(24 110 78 / 0.5), rgb(255 255 255 / 0.05));
   --tint-mint: linear-gradient(152deg, rgb(46 150 124 / 0.45), rgb(255 255 255 / 0.05));
-  --aurora-1: rgb(56 110 220 / 0.55);
-  --aurora-2: rgb(120 82 220 / 0.5);
-  --aurora-3: rgb(34 150 128 / 0.42);
-  --aurora-4: rgb(190 110 70 / 0.3);
+  --aurora-1: rgb(48 104 224 / 0.55);
+  --aurora-2: rgb(18 104 72 / 0.48);
+  --aurora-3: rgb(26 134 104 / 0.42);
+  --aurora-4: rgb(38 82 168 / 0.34);
 
   /* Pale tints are surfaces, not colours: in the dark they become translucent washes, and the
      deep shades that sit on them become light. One override retints every callout at once. */
+  --color-accent-50: rgb(21 122 80 / 0.16);
+  --color-accent-100: rgb(21 122 80 / 0.22);
+  --color-accent-200: rgb(47 158 107 / 0.32);
+  --color-accent-700: #6ee7a8;
+  --color-accent-800: #a7f3ca;
+
   --color-emerald-50: rgb(16 185 129 / 0.14);
   --color-emerald-100: rgb(16 185 129 / 0.2);
   --color-emerald-200: rgb(52 211 153 / 0.3);
@@ -173,9 +187,13 @@
   --shadow-float: 0 1px 0 0 rgb(255 255 255 / 0.12) inset, 0 22px 48px -22px rgb(0 0 0 / 0.8);
 }
 
-/* Utility-level exception: the CTA gradient keeps brand-600, text does not. */
+/* Utility-level exception: the gradients keep 600 as a stop, text does not. */
 [data-theme='dark'] .text-brand-600 {
   color: var(--color-brand-300);
+}
+
+[data-theme='dark'] .text-accent-600 {
+  color: var(--color-accent-300);
 }
 
 @layer base {
@@ -308,8 +326,8 @@
   .tint-blue {
     background: var(--tint-blue);
   }
-  .tint-violet {
-    background: var(--tint-violet);
+  .tint-accent {
+    background: var(--tint-accent);
   }
   .tint-mint {
     background: var(--tint-mint);

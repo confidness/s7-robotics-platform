@@ -57,7 +57,7 @@ export default function MentorDashboard() {
         <StatTile label={t('total_students')} value={stats.total} sub={t('n_groups', { n: stats.groups.length })} icon={Users} tone="brand" />
         <StatTile label={t('active_this_week')} value={stats.active} sub={t('attendance_percent', { n: stats.attendance })} icon={UserCheck} tone="success" />
         <StatTile label={t('awaiting_review')} value={queue.length} sub={queue.length ? t('oldest_first_in_the_queue') : t('nothing_pending')} icon={ClipboardCheck} tone={queue.length ? 'warning' : 'neutral'} />
-        <StatTile label={t('average_progress')} value={`${stats.avgProgress}%`} sub={t('across_current_tracks')} icon={TrendingUp} tone="violet" />
+        <StatTile label={t('average_progress')} value={`${stats.avgProgress}%`} sub={t('across_current_tracks')} icon={TrendingUp} tone="accent" />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
