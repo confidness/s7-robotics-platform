@@ -19,13 +19,27 @@ const ANTHROPIC_ENDPOINT = 'https://api.anthropic.com/v1/messages'
 const OPENROUTER_ENDPOINT = 'https://openrouter.ai/api/v1/chat/completions'
 
 /**
- * A free model, so the mentor can run on an account with no balance at all.
+ * Free models to try, in order, until one answers.
  *
- * OpenRouter's free tier moves around — a model retires, a new one takes its place — so this is
- * only the default. OPENROUTER_MODEL overrides it without touching code, which matters because a
- * retired id comes back as a 404 that no amount of redeploying will fix.
+ * A single hardcoded id is the wrong shape for this. OpenRouter's free tier is a moving target —
+ * a model goes paid, another takes its place — and the failure is a 404 that no amount of
+ * redeploying fixes, at the worst possible moment. Trying the next candidate costs one extra
+ * round trip on a day when the first has retired, and nothing at all on every other day.
+ *
+ * OPENROUTER_MODEL still wins outright when set, because someone naming a model means it.
  */
-const OPENROUTER_MODEL = 'meta-llama/llama-3.3-70b-instruct:free'
+const OPENROUTER_MODELS = [
+  'deepseek/deepseek-chat-v3-0324:free',
+  'openai/gpt-oss-20b:free',
+  'meta-llama/llama-3.2-3b-instruct:free',
+  'mistralai/mistral-7b-instruct:free',
+  'google/gemma-2-9b-it:free',
+]
+
+/** Reasons to try the next candidate rather than give up: this model, not this key or this quota. */
+function modelUnavailable(status: number, detail: string) {
+  return status === 404 || /unavailable for free|no endpoints|not a valid model|model not found|is not available/i.test(detail)
+}
 
 /** Long enough for an explanation and a short snippet, short enough to stay quick and cheap. */
 const MAX_TOKENS = 700
@@ -42,9 +56,12 @@ type Locale = keyof typeof LANGUAGE
  */
 function pickProvider() {
   const openrouter = process.env.OPENROUTER_API_KEY?.trim()
-  if (openrouter) return { name: 'openrouter' as const, key: openrouter, model: process.env.OPENROUTER_MODEL?.trim() || OPENROUTER_MODEL }
+  if (openrouter) {
+    const pinned = process.env.OPENROUTER_MODEL?.trim()
+    return { name: 'openrouter' as const, key: openrouter, models: pinned ? [pinned] : OPENROUTER_MODELS }
+  }
   const anthropic = process.env.ANTHROPIC_API_KEY?.trim()
-  if (anthropic) return { name: 'anthropic' as const, key: anthropic, model: ANTHROPIC_MODEL }
+  if (anthropic) return { name: 'anthropic' as const, key: anthropic, models: [ANTHROPIC_MODEL] }
   return null
 }
 
@@ -100,9 +117,9 @@ export default async function handler(req: Request): Promise<Response> {
         ok: true,
         configured: Boolean(health),
         provider: health?.name ?? null,
-        // The model id is not a secret and is the thing most likely to be wrong on OpenRouter,
-        // whose free ids retire without notice. Naming it saves guessing at a 404.
-        model: health?.model ?? null,
+        // Not a secret, and the thing most likely to be wrong on OpenRouter, whose free ids retire
+        // without notice. 'auto' means the built-in candidate list rather than a pinned choice.
+        model: health ? (health.models.length > 1 ? `auto (${health.models.length})` : health.models[0]) : null,
         // Whether one is set, never what it is. It separates "the variable never arrived" from
         // "it arrived and Anthropic still refuses it", which need different things done to them.
         workspace: Boolean(process.env.ANTHROPIC_WORKSPACE_ID?.trim()),
@@ -137,75 +154,99 @@ export default async function handler(req: Request): Promise<Response> {
   const system = systemPrompt(locale, body.lessonTitle, body.courseTitle, body.code)
   const openrouter = provider.name === 'openrouter'
 
+  let status = 0
+  let detail = ''
+
   try {
-    const upstream = await fetch(openrouter ? OPENROUTER_ENDPOINT : ANTHROPIC_ENDPOINT, {
-      method: 'POST',
-      headers: openrouter
-        ? {
-            'content-type': 'application/json',
-            authorization: `Bearer ${provider.key}`,
-            // Optional on OpenRouter and used only for its public rankings. The deployment's own
-            // origin is the honest value, and there is nothing private in it.
-            'HTTP-Referer': req.headers.get('origin') ?? 'https://s7-robotics-platform.vercel.app',
-            'X-Title': 'S7 Robotics Platform',
-          }
-        : {
-            'content-type': 'application/json',
-            'x-api-key': provider.key,
-            'anthropic-version': '2023-06-01',
-            // An organisation-level key belongs to no workspace, and Anthropic refuses it with a
-            // 400 until one is named. A key created inside a workspace carries that itself and
-            // needs no header, so this is set only when there is something to set.
-            ...(workspace ? { 'anthropic-workspace-id': workspace } : {}),
-          },
-      body: JSON.stringify(
-        openrouter
+    // One candidate on Anthropic, and on OpenRouter as many as it takes to find one still free.
+    for (const model of provider.models) {
+      const upstream = await fetch(openrouter ? OPENROUTER_ENDPOINT : ANTHROPIC_ENDPOINT, {
+        method: 'POST',
+        headers: openrouter
           ? {
-              model: provider.model,
-              max_tokens: MAX_TOKENS,
-              // No assistant prefill here. It is an Anthropic guarantee, and OpenRouter routes to
-              // whichever provider is cheapest today — not all of them honour a partial turn.
-              // parseReply and asProse cover a model that answers in prose instead.
-              messages: [
-                { role: 'system', content: system },
-                { role: 'user', content: question },
-              ],
+              'content-type': 'application/json',
+              authorization: `Bearer ${provider.key}`,
+              // Optional on OpenRouter and used only for its public rankings. The deployment's own
+              // origin is the honest value, and there is nothing private in it.
+              'HTTP-Referer': req.headers.get('origin') ?? 'https://s7-robotics-platform.vercel.app',
+              'X-Title': 'S7 Robotics Platform',
             }
           : {
-              model: provider.model,
-              max_tokens: MAX_TOKENS,
-              system,
-              // The opening brace is put in the model's mouth: it continues the JSON instead of
-              // deciding whether to write any. Asking nicely in the prompt is not a guarantee.
-              messages: [
-                { role: 'user', content: question },
-                { role: 'assistant', content: '{' },
-              ],
+              'content-type': 'application/json',
+              'x-api-key': provider.key,
+              'anthropic-version': '2023-06-01',
+              // An organisation-level key belongs to no workspace, and Anthropic refuses it with a
+              // 400 until one is named. A key created inside a workspace carries that itself and
+              // needs no header, so this is set only when there is something to set.
+              ...(workspace ? { 'anthropic-workspace-id': workspace } : {}),
             },
-      ),
-    })
+        body: JSON.stringify(
+          openrouter
+            ? {
+                model,
+                max_tokens: MAX_TOKENS,
+                // No assistant prefill here. It is an Anthropic guarantee, and OpenRouter routes
+                // to whichever provider is cheapest today — not all of them honour a partial turn.
+                // parseReply and asProse cover a model that answers in prose instead.
+                messages: [
+                  { role: 'system', content: system },
+                  { role: 'user', content: question },
+                ],
+              }
+            : {
+                model,
+                max_tokens: MAX_TOKENS,
+                system,
+                // The opening brace is put in the model's mouth: it continues the JSON instead of
+                // deciding whether to write any. Asking nicely in the prompt is not a guarantee.
+                messages: [
+                  { role: 'user', content: question },
+                  { role: 'assistant', content: '{' },
+                ],
+              },
+        ),
+      })
 
-    if (!upstream.ok) {
-      // Rate limit, bad key, upstream outage — all the same to the student: use the local base.
-      // The reason is carried anyway, because the alternative is guessing at a status code from
-      // the outside. It is an API error string and never contains the key.
-      return json({ error: 'upstream', status: upstream.status, detail: await errorMessage(upstream) }, 502)
+      if (!upstream.ok) {
+        // Rate limit, bad key, upstream outage — all the same to the student: use the local base.
+        // The reason is carried anyway, because the alternative is guessing at a status code from
+        // the outside. It is an API error string and never contains the key.
+        status = upstream.status
+        detail = await errorMessage(upstream)
+        // A retired free model is worth stepping past. A bad key or an exhausted quota is not:
+        // every remaining candidate would fail the same way, slowly.
+        if (openrouter && modelUnavailable(status, detail)) continue
+        break
+      }
+
+      const data = (await upstream.json()) as {
+        content?: { type: string; text?: string }[]
+        choices?: { message?: { content?: string } }[]
+        error?: { message?: string; code?: number }
+      }
+      // OpenRouter can answer 200 with the failure in the body instead of the status.
+      if (openrouter && data.error?.message) {
+        status = data.error.code ?? 200
+        detail = data.error.message.slice(0, 300)
+        if (modelUnavailable(status, detail)) continue
+        break
+      }
+
+      const raw = openrouter ? (data.choices?.[0]?.message?.content ?? '') : (data.content?.find((c) => c.type === 'text')?.text ?? '')
+      // The reply is a continuation of '{', so the brace has to be put back before parsing. Trying
+      // the raw text first costs nothing and covers a model that repeated the brace anyway.
+      const parsed = parseReply(raw) ?? (openrouter ? null : parseReply('{' + raw)) ?? asProse(raw)
+      if (!parsed) {
+        status = 502
+        detail = 'unparseable'
+        continue
+      }
+
+      // Which model actually answered, so the diagnostic can name it. Not a secret.
+      return json({ ...parsed, model }, 200)
     }
 
-    const data = (await upstream.json()) as {
-      content?: { type: string; text?: string }[]
-      choices?: { message?: { content?: string } }[]
-      error?: { message?: string }
-    }
-    // OpenRouter can answer 200 with an error in the body, so a missing choice is not a surprise.
-    if (openrouter && data.error?.message) return json({ error: 'upstream', status: 200, detail: data.error.message.slice(0, 300) }, 502)
-    const raw = openrouter ? (data.choices?.[0]?.message?.content ?? '') : (data.content?.find((c) => c.type === 'text')?.text ?? '')
-    // The reply is a continuation of '{', so the brace has to be put back before parsing. Trying
-    // the raw text first costs nothing and covers a model that repeated the brace anyway.
-    const parsed = parseReply(raw) ?? (openrouter ? null : parseReply('{' + raw)) ?? asProse(raw)
-    if (!parsed) return json({ error: 'unparseable' }, 502)
-
-    return json(parsed, 200)
+    return json({ error: 'upstream', status, detail }, 502)
   } catch {
     return json({ error: 'upstream' }, 502)
   }

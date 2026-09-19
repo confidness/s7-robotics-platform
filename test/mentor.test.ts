@@ -29,6 +29,28 @@ interface Captured {
 
 let captured: Captured | null = null
 
+/** Records every call in order, for the cases where more than one goes out. */
+let calls: Captured[] = []
+
+/**
+ * Replies differently to each successive call, which is how a model fallthrough becomes visible.
+ * Each entry is one upstream attempt, in order; the last one repeats if the code asks again.
+ */
+function stubSequence(replies: { status?: number; text?: string; raw?: unknown }[]) {
+  calls = []
+  globalThis.fetch = (async (url: string, init: RequestInit) => {
+    const body = JSON.parse(String(init.body)) as Record<string, unknown>
+    calls.push({ url: String(url), method: init.method, headers: init.headers as Record<string, string>, body })
+    const reply = replies[Math.min(calls.length - 1, replies.length - 1)]
+    const status = reply.status ?? 200
+    return {
+      ok: status >= 200 && status < 300,
+      status,
+      json: async () => reply.raw ?? { content: [{ type: 'text', text: reply.text ?? '' }] },
+    }
+  }) as unknown as typeof fetch
+}
+
 /** Stands in for api.anthropic.com and records the call verbatim. */
 function stubAnthropic(reply: { status?: number; text?: string; raw?: unknown }) {
   captured = null
@@ -207,10 +229,42 @@ async function run() {
   check('the model id can be overridden', (captured as Captured | null)?.body.model === 'openai/gpt-oss-20b:free', (captured as Captured | null)?.body.model)
   delete process.env.OPENROUTER_MODEL
 
-  // A retired free id is the likeliest OpenRouter failure, and it must name itself.
-  stubAnthropic({ status: 404, raw: { error: { message: 'No endpoints found for meta-llama/llama-3.3-70b-instruct:free.' } } })
-  out = (await (await post(ASK)).json()) as Record<string, unknown>
-  check('a retired model id is reported with its reason', out.status === 404 && String(out.detail).includes('No endpoints'), out)
+  // A free id going paid is what actually happened in production, and it must not end the attempt.
+  const WENT_PAID = { status: 404, raw: { error: { message: 'This model is unavailable for free. The paid version is available now.' } } }
+  stubSequence([WENT_PAID, WENT_PAID, { raw: { choices: [{ message: { content: GOOD } }] } }])
+  res = await post(ASK)
+  out = (await res.json()) as Record<string, unknown>
+  check('a retired free model falls through to the next', res.status === 200, { status: res.status, out })
+  check('it took exactly three attempts', calls.length === 3, calls.length)
+  check('each attempt asked for a different model', new Set(calls.map((x) => x.body.model)).size === 3, calls.map((x) => x.body.model))
+  check('the answering model is named', String(out.model).endsWith(':free'), out.model)
+
+  // Every candidate gone: the last reason is what the mentor reports.
+  stubSequence([WENT_PAID])
+  res = await post(ASK)
+  out = (await res.json()) as Record<string, unknown>
+  check('all candidates exhausted is a 502', res.status === 502, res.status)
+  check('the reason survives the whole loop', String(out.detail).includes('unavailable for free'), out)
+  check('every candidate was tried', calls.length >= 5, calls.length)
+
+  // A bad key would fail identically on all of them, so it must stop at the first.
+  stubSequence([{ status: 401, raw: { error: { message: 'No auth credentials found' } } }])
+  res = await post(ASK)
+  check('an auth failure stops after one attempt', calls.length === 1, calls.length)
+  check('an auth failure is still a 502', res.status === 502, res.status)
+
+  // So would an exhausted daily quota.
+  stubSequence([{ status: 429, raw: { error: { message: 'Rate limit exceeded: free-models-per-day' } } }])
+  await post(ASK)
+  check('a rate limit stops after one attempt', calls.length === 1, calls.length)
+
+  // A pinned model is a deliberate choice and must not be silently replaced.
+  process.env.OPENROUTER_MODEL = 'some/pinned-model:free'
+  stubSequence([WENT_PAID])
+  res = await post(ASK)
+  check('a pinned model is tried once and not substituted', calls.length === 1 && calls[0].body.model === 'some/pinned-model:free', calls.map((x) => x.body.model))
+  check('a pinned model that is gone reports why', res.status === 502)
+  delete process.env.OPENROUTER_MODEL
 
   // OpenRouter can answer 200 and put the failure in the body instead.
   stubAnthropic({ raw: { error: { message: 'Rate limit exceeded: free-models-per-day' } } })
@@ -226,7 +280,12 @@ async function run() {
 
   const orHealth = (await (await handler(new Request('https://example.test/api/mentor', { method: 'GET' }))).json()) as Record<string, unknown>
   check('health names the provider', orHealth.provider === 'openrouter', orHealth)
-  check('health names the model', String(orHealth.model).endsWith(':free'), orHealth)
+  check('health says the model list is automatic', orHealth.model === 'auto (5)', orHealth)
+
+  process.env.OPENROUTER_MODEL = 'some/pinned-model:free'
+  const pinnedHealth = (await (await handler(new Request('https://example.test/api/mentor', { method: 'GET' }))).json()) as Record<string, unknown>
+  check('health names a pinned model exactly', pinnedHealth.model === 'some/pinned-model:free', pinnedHealth)
+  delete process.env.OPENROUTER_MODEL
   check('health never returns the openrouter key', !JSON.stringify(orHealth).includes('or-test-key'), orHealth)
 
   // Both keys set: the one added deliberately after the other failed is the one that should win.

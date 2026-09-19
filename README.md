@@ -212,8 +212,9 @@ that demonstrates a technique is fine; a working version of the assignment is no
    - `MENTOR_PIN` — the 8-digit PIN that gates mentor registration.
    - `OPENROUTER_API_KEY` — the key for the AI mentor. OpenRouter carries free models, so this
      works on an account with no balance; get one at openrouter.ai/keys.
-   - `OPENROUTER_MODEL` — optional, defaults to a free model. Free ids retire without notice,
-     and a retired one is a 404 no redeploy will fix, so it is a variable rather than a constant.
+   - `OPENROUTER_MODEL` — optional, and usually left empty. Blank means several free models are
+     tried in order and the first that answers is used, which survives a free id going paid
+     without notice. Setting it pins one model, tried alone and never substituted.
    - `ANTHROPIC_API_KEY` — an alternative to the above, used when no OpenRouter key is set.
    - `ANTHROPIC_WORKSPACE_ID` — only if that key was created at the organisation level rather
      than inside a workspace. Anthropic refuses such a key with a 400 until a workspace is
