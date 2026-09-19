@@ -13,7 +13,7 @@ students and no fake projects — the first person to open it registers the firs
 | Student | Register with name, email and password. You start on Arduino lesson one. |
 | Mentor | Register and pick **Mentor** — the form then asks for the mentor PIN. |
 
-The PIN comes from `VITE_MENTOR_PIN`, falling back to `4821` locally. Set your own in Vercel.
+The PIN comes from `VITE_MENTOR_PIN`, falling back to `48213705` locally. Set your own in Vercel.
 
 It is worth being plain about what that PIN is: Vite inlines every `VITE_*` variable into the
 client bundle at build time, so the value ends up readable in devtools no matter where it is
@@ -62,6 +62,20 @@ assignments**.
 Multiple-choice questions mark themselves, so a lesson made only of them settles the moment it
 is handed in and pays out on the spot. Anything written by hand cannot be marked by a machine,
 so it goes to the mentor and travels the same review loop projects do.
+
+## Talking to a real board
+
+The lesson's Code tab carries a serial terminal that opens a USB port straight from the page —
+no driver, no install. What it buys depends on the board:
+
+| | Monitor | Run code from the page |
+| --- | --- | --- |
+| Arduino (C++) | yes | no — C++ has to be compiled, so uploading stays in the Arduino IDE |
+| ESP32 / Pico (MicroPython) | yes | yes — the firmware exposes a REPL on the same port |
+
+Web Serial is Chrome and Edge on desktop only, over HTTPS or localhost, and the port is always
+chosen by the person in the browser's own dialog. Where it is missing the terminal says so and
+the rest of the lesson, including the Virtual Lab, works untouched.
 
 ## Groups
 

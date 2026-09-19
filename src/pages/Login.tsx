@@ -11,7 +11,8 @@ import { t } from '../i18n'
 import { Mark } from '../components/Mark'
 
 /** Set VITE_MENTOR_PIN in the deployment environment; the fallback only covers local runs. */
-const MENTOR_PIN = import.meta.env.VITE_MENTOR_PIN ?? '4821'
+const MENTOR_PIN = import.meta.env.VITE_MENTOR_PIN ?? '48213705'
+const PIN_LENGTH = 8
 
 export default function Login({ register: startOnRegister }: { register?: boolean }) {
   const { login, register, state } = useApp()
@@ -35,7 +36,11 @@ export default function Login({ register: startOnRegister }: { register?: boolea
     if (password.length < 6) next.password = t('use_at_least_6_characters')
     if (mode === 'register') {
       if (name.trim().length < 2) next.name = t('tell_us_your_name')
-      if (role === 'mentor' && pin.trim() !== MENTOR_PIN) next.pin = t('that_mentor_pin_is_not_right_ask_the_academy_lea')
+      if (role === 'mentor') {
+        const entered = pin.trim()
+        if (entered.length !== PIN_LENGTH) next.pin = t('the_mentor_pin_is_n_digits', { n: PIN_LENGTH })
+        else if (entered !== MENTOR_PIN) next.pin = t('that_mentor_pin_is_not_right_ask_the_academy_lea')
+      }
     }
     setErrors(next)
     if (Object.keys(next).length) return
@@ -186,14 +191,14 @@ export default function Login({ register: startOnRegister }: { register?: boolea
                       <span className="relative block">
                         <KeyRound size={16} className="absolute top-1/2 left-3.5 -translate-y-1/2 text-ink-400" aria-hidden="true" />
                         <input
-                          className={`${inputClass} pl-10 font-mono tracking-[0.3em]`}
+                          className={`${inputClass} pl-10 font-mono tracking-[0.22em]`}
                           type="password"
                           inputMode="numeric"
                           autoComplete="one-time-code"
-                          maxLength={12}
+                          maxLength={PIN_LENGTH}
                           value={pin}
-                          onChange={(e) => setPin(e.target.value)}
-                          placeholder="••••"
+                          onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, PIN_LENGTH))}
+                          placeholder={'•'.repeat(PIN_LENGTH)}
                         />
                       </span>
                     </Field>

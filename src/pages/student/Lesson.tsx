@@ -3,14 +3,16 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
   AlertTriangle, ArrowLeft, ArrowRight, Bot, Check, CheckCircle2, ChevronRight, CircuitBoard, Code2, Cpu, FlaskConical, Info, Lightbulb, ListChecks, Lock, PlayCircle,
   RotateCcw, Send, Sparkles, Target, Trophy, Wand2, Zap,
-} from 'lucide-react'
+ Usb } from 'lucide-react'
 import { useApp, useToast } from '../../lib/store'
 import { isLessonUnlocked, nextLessonAfter, profileOf } from '../../lib/selectors'
 import { lessonsForCourse, modulesForCourse } from '../../lib/curriculum'
 import { runChecks, type CheckReport } from '../../lib/codecheck'
+import type { PlatformId } from '../../lib/types'
 import { Badge, Button, Card, EmptyState, Modal, ProgressBar, SectionHeading, Tabs, btn, STATUS_LABEL, STATUS_TONE } from '../../components/ui'
 import { CodeBlock, CodeEditor } from '../../components/code'
 import { ComponentCard, VirtualLab, WiringDiagram, WiringTable } from '../../components/lesson-parts'
+import SerialTerminal from '../../components/SerialTerminal'
 import ProjectSubmitModal from '../../components/ProjectSubmitModal'
 import AiMentorPanel from '../../components/AiMentorPanel'
 import NotFound from '../NotFound'
@@ -19,6 +21,9 @@ import { localizeDifficulty } from '../../i18n/content'
 
 type Section = 'theory' | 'components' | 'wiring' | 'code' | 'task' | 'challenge'
 const ORDER: Section[] = ['theory', 'components', 'wiring', 'code', 'task', 'challenge']
+
+/** Boards running MicroPython take code straight over the wire; C++ has to be compiled first. */
+const MICROPYTHON = new Set<PlatformId>(['esp32', 'pico'])
 
 const CALLOUT = {
   info: { icon: Info, class: 'border-brand-200/70 bg-brand-100/50 text-brand-800' },
@@ -397,6 +402,17 @@ function LessonPage() {
               ))}
             </ul>
           </Card>
+
+          {/* A real board, when one is plugged in. MicroPython platforms can be handed the code
+              itself; an Arduino sketch needs compiling, so there it is a monitor only. */}
+          <div>
+            <SectionHeading
+              title={t('board_terminal')}
+              subtitle={MICROPYTHON.has(course.platform) ? t('run_this_code_on_a_board_over_usb') : t('watch_what_the_board_prints_over_usb')}
+              icon={Usb}
+            />
+            <SerialTerminal code={code} canRun={MICROPYTHON.has(course.platform)} />
+          </div>
 
           {lesson.components.some((c) => c.id === 'hc-sr04') && (
             <div>
