@@ -45,10 +45,12 @@
   --color-brand-700: #0d43b4;
   --color-brand-800: #0b368f;
 
-  /* Amber and emerald text sit on pale glass, so 600 is darkened past Tailwind's
-     defaults (2.8:1 and 3.8:1 on that surface) to clear AA. */
+  /* Amber, emerald and rose text sit on pale glass, where Tailwind's own 600s reach only
+     2.8:1, 3.8:1 and 3.9:1. Each is darkened here so every status shade clears AA as text,
+     and they stay the same gradient stops they always were. */
   --color-amber-600: #92400e;
   --color-emerald-600: #047857;
+  --color-rose-600: #be123c;
 
   /* Deep green companion — the second stop in every accent gradient. Blue runs into it
      through teal, which is why the ramp leans slightly cool rather than grassy. */
@@ -80,13 +82,13 @@
   --fill-soft: rgb(255 255 255 / 0.5);
   --edge: rgb(255 255 255 / 0.7);
   --divider: rgb(255 255 255 / 0.6);
-  --tint-blue: linear-gradient(152deg, rgb(190 215 255 / 0.92), rgb(255 255 255 / 0.5));
+  --tint-blue: linear-gradient(152deg, rgb(190 215 255 / 0.92), rgb(186 236 214 / 0.62) 58%, rgb(255 255 255 / 0.5));
   --tint-accent: linear-gradient(152deg, rgb(183 231 208 / 0.9), rgb(255 255 255 / 0.5));
   --tint-mint: linear-gradient(152deg, rgb(186 242 220 / 0.9), rgb(255 255 255 / 0.5));
-  --aurora-1: rgb(96 158 255 / 0.78);
-  --aurora-2: rgb(62 170 122 / 0.5);
-  --aurora-3: rgb(120 214 180 / 0.55);
-  --aurora-4: rgb(150 190 255 / 0.44);
+  --aurora-1: rgb(96 158 255 / 0.74);
+  --aurora-2: rgb(42 158 108 / 0.58);
+  --aurora-3: rgb(110 214 176 / 0.62);
+  --aurora-4: rgb(96 186 156 / 0.46);
 
   /* Code keeps its own dark palette in both themes — an editor is always a dark instrument. */
   --code-bg: #0b1120;
@@ -133,13 +135,13 @@
   --fill-soft: rgb(255 255 255 / 0.055);
   --edge: rgb(255 255 255 / 0.13);
   --divider: rgb(255 255 255 / 0.09);
-  --tint-blue: linear-gradient(152deg, rgb(56 104 190 / 0.5), rgb(255 255 255 / 0.05));
+  --tint-blue: linear-gradient(152deg, rgb(56 104 190 / 0.5), rgb(24 116 86 / 0.4) 62%, rgb(255 255 255 / 0.05));
   --tint-accent: linear-gradient(152deg, rgb(24 110 78 / 0.5), rgb(255 255 255 / 0.05));
   --tint-mint: linear-gradient(152deg, rgb(46 150 124 / 0.45), rgb(255 255 255 / 0.05));
-  --aurora-1: rgb(48 104 224 / 0.55);
-  --aurora-2: rgb(18 104 72 / 0.48);
-  --aurora-3: rgb(26 134 104 / 0.42);
-  --aurora-4: rgb(38 82 168 / 0.34);
+  --aurora-1: rgb(44 100 220 / 0.5);
+  --aurora-2: rgb(20 116 80 / 0.56);
+  --aurora-3: rgb(28 144 112 / 0.5);
+  --aurora-4: rgb(24 96 82 / 0.38);
 
   /* Pale tints are surfaces, not colours: in the dark they become translucent washes, and the
      deep shades that sit on them become light. One override retints every callout at once. */
@@ -316,7 +318,8 @@
 
   .glow-cta {
     box-shadow:
-      0 10px 28px -8px rgb(47 107 240 / 0.6),
+      0 10px 28px -8px rgb(21 96 236 / 0.5),
+      0 12px 30px -14px rgb(21 122 80 / 0.55),
       0 1px 0 0 rgb(255 255 255 / 0.5) inset;
   }
 

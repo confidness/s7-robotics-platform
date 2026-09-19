@@ -63,6 +63,17 @@ Multiple-choice questions mark themselves, so a lesson made only of them settles
 is handed in and pays out on the spot. Anything written by hand cannot be marked by a machine,
 so it goes to the mentor and travels the same review loop projects do.
 
+## Competitions
+
+Nothing is seeded. A mentor announces an event from inside the app — name, place, start and end
+date and time, and a running order of slots each with its own day and clock time. Announcing
+notifies every student once; editing afterwards does not nag them again.
+
+Teams are created by the mentor and filled from the registered students, one team per student
+per event. Points are only ever earned: a team claims a task, submits it, and the mentor scores
+it. Un-scoring or deleting a scored task hands the points back, so a mistake is reversible and
+nothing on the leaderboard was typed in by hand.
+
 ## Themes
 
 Light, dark, or follow the system — the switch sits in the header (and in the account menu on

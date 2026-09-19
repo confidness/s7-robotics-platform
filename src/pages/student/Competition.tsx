@@ -14,15 +14,34 @@ const TASK_TONE: Record<CompetitionTask['status'], 'neutral' | 'brand' | 'warnin
   submitted: 'warning',
   scored: 'success',
 }
-const TASK_LABEL: Record<CompetitionTask['status'], string> = { open: 'Open', in_progress: 'in_progress', submitted: 'submitted', scored: 'scored' }
+const TASK_LABEL: Record<CompetitionTask['status'], string> = {
+  open: 'task_status_open',
+  in_progress: 'task_status_in_progress',
+  submitted: 'task_status_submitted',
+  scored: 'task_status_scored',
+}
 
 export default function Competition() {
   const { state, user, joinTeam, setTaskStatus } = useApp()
   const toast = useToast()
   const [tab, setTab] = useState<'teams' | 'tasks' | 'schedule' | 'leaderboard'>('teams')
+  const [picked, setPicked] = useState<string | null>(null)
   if (!user) return null
 
-  const competition = state.competitions[0]
+  // Events are announced by a mentor; nothing is seeded, so this is empty until one is.
+  const competition = state.competitions.find((c) => c.id === picked) ?? state.competitions[0]
+  if (!competition) {
+    return (
+      <div className="animate-rise space-y-6">
+        <header>
+          <h1 className="text-[28px] font-bold tracking-[-0.03em] text-ink-900">{t('competition')}</h1>
+          <p className="mt-1 text-sm text-ink-500">{t('events_your_academy_is_running')}</p>
+        </header>
+        <EmptyState icon={Trophy} title={t('no_events_yet')} body={t('when_a_mentor_announces_one_it_appears_here_with')} />
+      </div>
+    )
+  }
+
   const teams = state.teams.filter((t) => t.competitionId === competition.id).sort((a, b) => b.points - a.points)
   const myTeam = teams.find((t) => t.memberIds.includes(user.id))
   const tasks = state.competitionTasks.filter((t) => t.competitionId === competition.id)
@@ -31,13 +50,32 @@ export default function Competition() {
 
   return (
     <div className="animate-rise space-y-6">
+      {state.competitions.length > 1 && (
+        <div className="flex flex-wrap gap-2">
+          {state.competitions.map((c) => (
+            <button
+              key={c.id}
+              onClick={() => setPicked(c.id)}
+              aria-pressed={c.id === competition.id}
+              className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
+                c.id === competition.id ? 'bg-accent-600 text-white' : 'fill text-ink-600 ring-1 rim hover:text-ink-900'
+              }`}
+            >
+              {c.name}
+            </button>
+          ))}
+        </div>
+      )}
+
       <Card className="overflow-hidden">
         <div className="tint-accent specular relative p-6 sm:p-8">
           <div className="relative flex flex-wrap items-end justify-between gap-5">
             <div>
-              <span className="inline-flex items-center gap-1.5 rounded-full fill-strong px-3 py-1 text-xs font-bold text-accent-700">
-                <Trophy size={13} aria-hidden="true" /> {competition.season}
-              </span>
+              {competition.season && (
+                <span className="inline-flex items-center gap-1.5 rounded-full fill-strong px-3 py-1 text-xs font-bold text-accent-700">
+                  <Trophy size={13} aria-hidden="true" /> {competition.season}
+                </span>
+              )}
               <h1 className="mt-3 text-[28px] leading-tight font-bold tracking-[-0.03em] text-ink-900 sm:text-[34px]">{competition.name}</h1>
               <p className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-ink-600">
                 <span className="inline-flex items-center gap-1.5">
@@ -162,17 +200,18 @@ export default function Competition() {
                       </span>
                       <span className="inline-flex items-center gap-1.5 font-semibold text-amber-600">
                         <Zap size={12} aria-hidden="true" />
-                        {task.points} points
+                        {t('n_pts', { n: task.points })}
                       </span>
                     </p>
                   </div>
-                  {mine && task.status !== 'scored' && (
+                  {/* An open task has no team yet, so claiming it is what assigns one. */}
+                  {myTeam && (task.status === 'open' || (mine && task.status !== 'scored')) && (
                     <Button
                       size="sm"
                       variant={task.status === 'open' ? 'primary' : 'secondary'}
                       onClick={() => {
                         const next = task.status === 'open' ? 'in_progress' : 'submitted'
-                        setTaskStatus(task.id, next)
+                        setTaskStatus(task.id, next, myTeam.id)
                         toast({ title: next === 'in_progress' ? t('task_started') : t('task_submitted'), body: task.title, tone: 'success' })
                       }}
                     >
@@ -188,12 +227,15 @@ export default function Competition() {
 
       {tab === 'schedule' && (
         <Card className="p-5 sm:p-6">
-          <SectionHeading title={t('event_schedule')} subtitle={t('date_range', { from: formatDate(competition.startsAt), to: formatDate(competition.endsAt) })} icon={CalendarClock} />
+          <SectionHeading title={t('running_order')} subtitle={t('date_range', { from: formatDate(competition.startsAt), to: formatDate(competition.endsAt) })} icon={CalendarClock} />
+          {competition.schedule.length === 0 && <p className="mt-3 text-sm text-ink-500">{t('the_running_order_has_not_been_published_yet')}</p>}
           <ol className="relative space-y-4 border-l edge pl-6">
             {competition.schedule.map((item) => (
-              <li key={`${item.time}-${item.title}`} className="relative">
-                <span className="absolute top-1.5 -left-[1.9rem] h-3 w-3 rounded-full bg-brand-600 ring-4 ring-white" aria-hidden="true" />
-                <p className="font-mono text-xs font-bold text-brand-700">{item.time}</p>
+              <li key={item.id} className="relative">
+                <span className="absolute top-1.5 -left-[1.9rem] h-3 w-3 rounded-full bg-accent-600 ring-4 ring-white" aria-hidden="true" />
+                <p className="font-mono text-xs font-bold text-accent-700">
+                  {t('day_n', { n: item.day })} · {item.time}
+                </p>
                 <p className="mt-0.5 text-sm font-bold text-ink-900">{item.title}</p>
                 <p className="mt-0.5 text-sm text-ink-600">{item.detail}</p>
               </li>

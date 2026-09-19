@@ -1,4 +1,4 @@
-import type { Achievement, Competition, CompetitionTask, Course, Lesson, Module } from '../lib/types'
+import type { Achievement, Course, Lesson, Module } from '../lib/types'
 import { getLocale } from './index'
 import { RU } from './content.ru'
 import { KK } from './content.kk'
@@ -36,8 +36,6 @@ export interface ContentPack {
    *  Pure identifiers (`Arduino D6 (~)`, `Port A`) need no entry — they pass through unchanged. */
   terminals: Record<string, string>
   wireColors: Record<string, string>
-  competitions: Record<string, { name?: string; season?: string; location?: string; description?: string; schedule?: { title?: string; detail?: string }[] }>
-  competitionTasks: Record<string, { title?: string; description?: string }>
 }
 
 const PACKS: Record<string, ContentPack | undefined> = { ru: RU, kk: KK, en: undefined }
@@ -72,18 +70,6 @@ export function localizeDifficulty(value: string): string {
   return pack()?.difficulty[value] ?? value
 }
 
-export function localizeCompetition(competition: Competition): Competition {
-  const p = pack()?.competitions[competition.id]
-  if (!p) return competition
-  // Times are clock strings on the day — only the titles and details are words.
-  const schedule = p.schedule ? competition.schedule.map((row, i) => ({ ...row, ...p.schedule![i] })) : competition.schedule
-  return { ...competition, ...p, schedule }
-}
-
-export function localizeCompetitionTask(task: CompetitionTask): CompetitionTask {
-  const p = pack()?.competitionTasks[task.id]
-  return p ? { ...task, ...p } : task
-}
 
 export function localizeLesson(lesson: Lesson): Lesson {
   const current = pack()

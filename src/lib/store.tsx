@@ -1,14 +1,14 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import type { AppState, Feedback, Project, User } from './types'
-import { COMPETITIONS, COMPETITION_TASKS, createInitialState } from './seed'
+import { createInitialState } from './seed'
 import { COURSES, LESSONS, MODULES } from './curriculum'
 import { ACHIEVEMENTS } from './gamification'
 import * as logic from './logic'
 import type { ProjectDraft } from './logic'
-import type { CustomLesson, TaskAnswer } from './types'
+import type { Competition, CompetitionTask, CustomLesson, TaskAnswer, Team } from './types'
 import { profileOf } from './selectors'
 import { t as translate, useLocale } from '../i18n'
-import { localizeAchievement, localizeCompetition, localizeCompetitionTask, localizeCourse, localizeLesson, localizeModule } from '../i18n/content'
+import { localizeAchievement, localizeCourse, localizeLesson, localizeModule } from '../i18n/content'
 
 const STORAGE_KEY = 's7-robotics-platform.v1'
 
@@ -26,7 +26,10 @@ function loadState(): AppState {
       profiles: saved.profiles ?? fresh.profiles,
       projects: saved.projects ?? fresh.projects,
       xp: saved.xp ?? fresh.xp,
+      groups: saved.groups ?? fresh.groups,
       teams: saved.teams ?? fresh.teams,
+      // Events are announced from inside the app, so they are user data like everything above.
+      competitions: saved.competitions ?? fresh.competitions,
       competitionTasks: saved.competitionTasks ?? fresh.competitionTasks,
       notifications: saved.notifications ?? fresh.notifications,
       // Mentor-written lessons ARE user data, unlike the curriculum above, so they come back.
@@ -71,6 +74,13 @@ interface Ctx {
   setLessonPublished: (lessonId: string, published: boolean) => void
   submitLessonAnswers: (lessonId: string, answers: TaskAnswer[]) => void
   reviewLessonSubmission: (submissionId: string, feedback: string, awardedXp: number) => void
+  saveCompetition: (competition: Competition) => void
+  deleteCompetition: (competitionId: string) => void
+  announceCompetition: (competitionId: string) => void
+  saveCompetitionTask: (task: CompetitionTask) => void
+  deleteCompetitionTask: (taskId: string) => void
+  saveTeam: (team: Team) => void
+  deleteTeam: (teamId: string) => void
   resetDemo: () => void
 }
 
@@ -100,19 +110,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
       modules: MODULES.map(localizeModule),
       lessons: LESSONS.map(localizeLesson),
       achievements: ACHIEVEMENTS.map(localizeAchievement),
-      competitions: COMPETITIONS.map(localizeCompetition),
-      // Tasks carry live status and team, so only their words are re-derived.
-      competitionTasks: s.competitionTasks.map((task) => {
-        const canonical = COMPETITION_TASKS.find((c) => c.id === task.id)
-        return localizeCompetitionTask(canonical ? { ...task, title: canonical.title, description: canonical.description } : task)
-      }),
     }))
   }, [locale])
 
   useEffect(() => {
     try {
-      const { users, profiles, projects, xp, teams, competitionTasks, notifications, customLessons, lessonSubmissions, sessionUserId } = state
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ users, profiles, projects, xp, teams, competitionTasks, notifications, customLessons, lessonSubmissions, sessionUserId }))
+      const { users, profiles, projects, xp, groups, teams, competitions, competitionTasks, notifications, customLessons, lessonSubmissions, sessionUserId } = state
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ users, profiles, projects, xp, groups, teams, competitions, competitionTasks, notifications, customLessons, lessonSubmissions, sessionUserId }))
     } catch {
       /* storage full or blocked — the app keeps working in memory */
     }
@@ -170,6 +174,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
       submitLessonAnswers: (lessonId, answers) => user && setState((s) => logic.submitLessonAnswers(s, user.id, lessonId, answers)),
       reviewLessonSubmission: (submissionId, feedback, awardedXp) =>
         user && setState((s) => logic.reviewLessonSubmission(s, submissionId, user.id, feedback, awardedXp)),
+      saveCompetition: (competition) => setState((s) => logic.saveCompetition(s, competition)),
+      deleteCompetition: (competitionId) => setState((s) => logic.deleteCompetition(s, competitionId)),
+      announceCompetition: (competitionId) => setState((s) => logic.announceCompetition(s, competitionId)),
+      saveCompetitionTask: (task) => setState((s) => logic.saveCompetitionTask(s, task)),
+      deleteCompetitionTask: (taskId) => setState((s) => logic.deleteCompetitionTask(s, taskId)),
+      saveTeam: (team) => setState((s) => logic.saveTeam(s, team)),
+      deleteTeam: (teamId) => setState((s) => logic.deleteTeam(s, teamId)),
       resetDemo() {
         localStorage.removeItem(STORAGE_KEY)
         setState(createInitialState())

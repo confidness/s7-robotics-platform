@@ -7,6 +7,7 @@ import Login from './pages/Login'
 import Assigned, { AssignedLesson } from './pages/student/Assigned'
 import MentorLessons, { LessonSubmissions } from './pages/mentor/MentorLessons'
 import LessonBuilder from './pages/mentor/LessonBuilder'
+import EventBuilder from './pages/mentor/EventBuilder'
 import NotFound from './pages/NotFound'
 
 import Dashboard from './pages/student/Dashboard'
@@ -89,6 +90,8 @@ export default function App() {
         <Route path="projects" element={<MentorProjects />} />
         <Route path="courses" element={<MentorCourses />} />
         <Route path="competition" element={<MentorCompetition />} />
+        <Route path="competition/new" element={<EventBuilder />} />
+        <Route path="competition/:competitionId/edit" element={<EventBuilder />} />
         <Route path="analytics" element={<MentorAnalytics />} />
         <Route path="lessons" element={<MentorLessons />} />
         <Route path="lessons/new" element={<LessonBuilder />} />

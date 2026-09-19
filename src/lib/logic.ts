@@ -2,7 +2,7 @@
  * Pure state transitions. No React, no DOM — every rule of the product lives here
  * so the UI only has to render the result and the data layer can be swapped for an API.
  */
-import type { AppState, Attachment, CustomLesson, Feedback, LessonSubmission, Notification, Project, ProjectStatus, StudentProfile, TaskAnswer, TextVars, User, XPTransaction } from './types'
+import type { AppState, Attachment, Competition, CompetitionTask, CustomLesson, Feedback, LessonSubmission, Notification, Project, ProjectStatus, StudentProfile, TaskAnswer, Team, TextVars, User, XPTransaction } from './types'
 import { MAX_TASKS_PER_LESSON } from './types'
 import { evaluateAchievements } from './gamification'
 import { courseLessonOrder } from './curriculum'
@@ -296,8 +296,21 @@ export function joinTeam(s: AppState, userId: string, teamId: string): AppState 
   return syncAchievements(next, userId)
 }
 
-export function setTaskStatus(s: AppState, taskId: string, status: AppState['competitionTasks'][number]['status'], teamId?: string): AppState {
-  return { ...s, competitionTasks: s.competitionTasks.map((t) => (t.id === taskId ? { ...t, status, teamId: teamId ?? t.teamId } : t)) }
+/**
+ * Scoring is the only thing that moves a team up the board — points are earned, never typed in.
+ * Un-scoring hands them back, so a mistake can be undone.
+ */
+export function setTaskStatus(s: AppState, taskId: string, status: CompetitionTask['status'], teamId?: string): AppState {
+  const task = s.competitionTasks.find((t) => t.id === taskId)
+  if (!task) return s
+  const owner = teamId ?? task.teamId
+  const delta = (status === 'scored' ? 1 : 0) - (task.status === 'scored' ? 1 : 0)
+
+  return {
+    ...s,
+    competitionTasks: s.competitionTasks.map((t) => (t.id === taskId ? { ...t, status, teamId: owner } : t)),
+    teams: delta && owner ? s.teams.map((team) => (team.id === owner ? { ...team, points: Math.max(0, team.points + delta * task.points) } : team)) : s.teams,
+  }
 }
 
 export function readNotifications(s: AppState, userId: string, id?: string): AppState {
@@ -439,4 +452,79 @@ export function reviewLessonSubmission(s: AppState, submissionId: string, mentor
     href: `/assigned/${submission.lessonId}`,
   })
   return syncAchievements(next, submission.studentId)
+}
+
+/* ---------------------------------------------------------------- mentor-announced events */
+
+/**
+ * Competitions, their running order and their teams are all written by a mentor inside the app.
+ * Nothing about an event is seeded, so an academy that has announced nothing shows an empty hall.
+ */
+export function saveCompetition(s: AppState, competition: Competition): AppState {
+  const exists = s.competitions.some((c) => c.id === competition.id)
+  return {
+    ...s,
+    competitions: exists ? s.competitions.map((c) => (c.id === competition.id ? competition : c)) : [competition, ...s.competitions],
+  }
+}
+
+/** Deleting an event takes its running order, its tasks and its teams with it. */
+export function deleteCompetition(s: AppState, competitionId: string): AppState {
+  return {
+    ...s,
+    competitions: s.competitions.filter((c) => c.id !== competitionId),
+    competitionTasks: s.competitionTasks.filter((t) => t.competitionId !== competitionId),
+    teams: s.teams.filter((t) => t.competitionId !== competitionId),
+  }
+}
+
+/** Announcing tells every student once; editing afterwards does not nag them again. */
+export function announceCompetition(s: AppState, competitionId: string): AppState {
+  const competition = s.competitions.find((c) => c.id === competitionId)
+  if (!competition) return s
+  let next = s
+  for (const student of s.users.filter((u) => u.role === 'student')) {
+    next = notify(next, {
+      userId: student.id,
+      title: 'notif_event_announced',
+      body: 'notif_event_announced_body',
+      vars: { name: competition.name, date: competition.startsAt },
+      kind: 'system',
+      href: '/competition',
+    })
+  }
+  return next
+}
+
+export function saveCompetitionTask(s: AppState, task: CompetitionTask): AppState {
+  const exists = s.competitionTasks.some((t) => t.id === task.id)
+  return { ...s, competitionTasks: exists ? s.competitionTasks.map((t) => (t.id === task.id ? task : t)) : [...s.competitionTasks, task] }
+}
+
+export function deleteCompetitionTask(s: AppState, taskId: string): AppState {
+  const task = s.competitionTasks.find((t) => t.id === taskId)
+  // A scored task has already paid out; removing it takes those points back.
+  const teams =
+    task?.status === 'scored' && task.teamId
+      ? s.teams.map((team) => (team.id === task.teamId ? { ...team, points: Math.max(0, team.points - task.points) } : team))
+      : s.teams
+  return { ...s, competitionTasks: s.competitionTasks.filter((t) => t.id !== taskId), teams }
+}
+
+export function saveTeam(s: AppState, team: Team): AppState {
+  const exists = s.teams.some((x) => x.id === team.id)
+  // A student belongs to one team per event, so joining here removes them from any other.
+  const cleaned = s.teams.map((x) =>
+    x.id === team.id || x.competitionId !== team.competitionId ? x : { ...x, memberIds: x.memberIds.filter((id) => !team.memberIds.includes(id)) },
+  )
+  return { ...s, teams: exists ? cleaned.map((x) => (x.id === team.id ? team : x)) : [...cleaned, team] }
+}
+
+export function deleteTeam(s: AppState, teamId: string): AppState {
+  return {
+    ...s,
+    teams: s.teams.filter((t) => t.id !== teamId),
+    // Tasks the team had claimed go back on the board rather than vanishing with it.
+    competitionTasks: s.competitionTasks.map((t) => (t.teamId === teamId ? { ...t, teamId: undefined, status: 'open' } : t)),
+  }
 }

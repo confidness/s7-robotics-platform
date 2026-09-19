@@ -196,6 +196,7 @@ export interface Team {
   name: string
   coachId: string
   memberIds: string[]
+  /** Earned by having tasks scored, never set by hand. */
   points: number
   competitionId: string
   motto: string
@@ -213,15 +214,30 @@ export interface CompetitionTask {
   teamId?: string
 }
 
+/** One row of the running order. `time` is a clock string the mentor types, e.g. "09:00". */
+export interface ScheduleSlot {
+  id: string
+  day: 1 | 2
+  time: string
+  title: string
+  detail: string
+}
+
+/**
+ * An event a mentor sets up. Nothing ships pre-made: an academy that has not announced
+ * anything shows an empty competition page rather than an invented cup.
+ */
 export interface Competition {
   id: string
+  authorId: string
   name: string
   season: string
   location: string
   startsAt: string
   endsAt: string
   description: string
-  schedule: { time: string; title: string; detail: string }[]
+  schedule: ScheduleSlot[]
+  createdAt: string
 }
 
 export interface Notification {

@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { AlertTriangle, BookOpen, CalendarClock, Flag, LogOut, MapPin, Medal, RefreshCw, Shield, Target, Trophy, Users, Zap } from 'lucide-react'
+import { AlertTriangle, BookOpen, CalendarClock, Flag, LogOut, MapPin, Medal, Pencil, Plus, RefreshCw, Shield, Target, Trash2, Trophy, Users, Zap } from 'lucide-react'
 import { useApp, useToast } from '../../lib/store'
 import { courseProgress, leaderboard, profileOf, students } from '../../lib/selectors'
 import { lessonsForCourse, modulesForCourse } from '../../lib/curriculum'
 import { Avatar, Badge, Button, Card, EmptyState, Modal, ProgressBar, SectionHeading } from '../../components/ui'
 import { formatDate } from '../../lib/hooks'
+import { NoEvents } from './EventBuilder'
 import { t, formatNumber } from '../../i18n'
 
 /* ------------------------------------------------------------------ courses */
@@ -103,22 +104,97 @@ export function MentorCourses() {
 /* ------------------------------------------------------------------ competition */
 
 export function MentorCompetition() {
-  const { state, user, setTaskStatus } = useApp()
+  const { state, user, setTaskStatus, deleteCompetition } = useApp()
   const toast = useToast()
+  const [picked, setPicked] = useState<string | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState(false)
   if (!user) return null
 
-  const competition = state.competitions[0]
+  // Nothing is seeded, so an academy that has announced nothing lands here.
+  const competition = state.competitions.find((c) => c.id === picked) ?? state.competitions[0]
+  if (!competition) {
+    return (
+      <div className="animate-rise space-y-6">
+        <header className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h1 className="text-[28px] font-bold tracking-[-0.03em] text-ink-900">{t('events')}</h1>
+            <p className="mt-1 text-sm text-ink-500">{t('announce_a_competition_set_the_running_order_and')}</p>
+          </div>
+          <Link to="/m/competition/new" className="shrink-0">
+            <Button icon={Plus}>{t('new_event')}</Button>
+          </Link>
+        </header>
+        <NoEvents />
+      </div>
+    )
+  }
+
   const teams = state.teams.filter((t) => t.competitionId === competition.id).sort((a, b) => b.points - a.points)
   const tasks = state.competitionTasks.filter((t) => t.competitionId === competition.id)
   const board = leaderboard(state).slice(0, 6)
 
   return (
     <div className="animate-rise space-y-6">
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          {state.competitions.map((c) => (
+            <button
+              key={c.id}
+              onClick={() => setPicked(c.id)}
+              aria-pressed={c.id === competition.id}
+              className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
+                c.id === competition.id ? 'bg-accent-600 text-white' : 'fill text-ink-600 ring-1 rim hover:text-ink-900'
+              }`}
+            >
+              {c.name}
+            </button>
+          ))}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Link to={`/m/competition/${competition.id}/edit`}>
+            <Button variant="secondary" size="sm" icon={Pencil}>
+              {t('edit')}
+            </Button>
+          </Link>
+          <Button variant="ghost" size="sm" icon={Trash2} className="text-rose-600" onClick={() => setConfirmDelete(true)}>
+            {t('delete')}
+          </Button>
+          <Link to="/m/competition/new">
+            <Button size="sm" icon={Plus}>
+              {t('new_event')}
+            </Button>
+          </Link>
+        </div>
+      </header>
+
+      <Modal open={confirmDelete} onClose={() => setConfirmDelete(false)} title={t('delete_this_event')} subtitle={competition.name}>
+        <p className="text-sm leading-relaxed text-ink-600">{t('deleting_removes_the_running_order_its_tasks_and')}</p>
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Button variant="secondary" onClick={() => setConfirmDelete(false)}>
+            {t('cancel')}
+          </Button>
+          <Button
+            variant="danger"
+            icon={Trash2}
+            onClick={() => {
+              deleteCompetition(competition.id)
+              setPicked(null)
+              setConfirmDelete(false)
+              toast({ title: t('event_deleted'), tone: 'success' })
+            }}
+          >
+            {t('delete')}
+          </Button>
+        </div>
+      </Modal>
+
       <Card className="overflow-hidden">
         <div className="tint-accent specular relative p-6 sm:p-8">
-          <span className="inline-flex items-center gap-1.5 rounded-full fill-strong px-3 py-1 text-xs font-bold text-accent-700">
-            <Trophy size={13} aria-hidden="true" /> {competition.season}
-          </span>
+          {competition.season && (
+            <span className="inline-flex items-center gap-1.5 rounded-full fill-strong px-3 py-1 text-xs font-bold text-accent-700">
+              <Trophy size={13} aria-hidden="true" /> {competition.season}
+            </span>
+          )}
           <h1 className="mt-3 text-[28px] leading-tight font-bold tracking-[-0.03em] text-ink-900 sm:text-[34px]">{competition.name}</h1>
           <p className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-ink-600">
             <span className="inline-flex items-center gap-1.5">
@@ -233,12 +309,15 @@ export function MentorCompetition() {
           </Card>
 
           <Card className="p-5 sm:p-6">
-            <SectionHeading title={t('schedule')} icon={CalendarClock} />
+            <SectionHeading title={t('running_order')} icon={CalendarClock} />
+            {competition.schedule.length === 0 && <p className="mt-3 text-sm text-ink-500">{t('no_slots_yet_add_the_first_one')}</p>}
             <ol className="relative space-y-3.5 border-l edge pl-5">
               {competition.schedule.map((s) => (
-                <li key={`${s.time}-${s.title}`} className="relative">
-                  <span className="absolute top-1.5 -left-[1.65rem] h-2.5 w-2.5 rounded-full bg-brand-600 ring-4 ring-white" aria-hidden="true" />
-                  <p className="font-mono text-xs font-bold text-brand-700">{s.time}</p>
+                <li key={s.id} className="relative">
+                  <span className="absolute top-1.5 -left-[1.65rem] h-2.5 w-2.5 rounded-full bg-accent-600 ring-4 ring-white" aria-hidden="true" />
+                  <p className="font-mono text-xs font-bold text-accent-700">
+                    {t('day_n', { n: s.day })} · {s.time}
+                  </p>
                   <p className="text-sm font-semibold text-ink-900">{s.title}</p>
                   <p className="text-xs text-ink-500">{s.detail}</p>
                 </li>
