@@ -29,11 +29,15 @@ const OPENROUTER_ENDPOINT = 'https://openrouter.ai/api/v1/chat/completions'
  * OPENROUTER_MODEL still wins outright when set, because someone naming a model means it.
  */
 const OPENROUTER_MODELS = [
-  'deepseek/deepseek-chat-v3-0324:free',
-  'openai/gpt-oss-20b:free',
-  'meta-llama/llama-3.2-3b-instruct:free',
-  'mistralai/mistral-7b-instruct:free',
-  'google/gemma-2-9b-it:free',
+  // A router, not a model: OpenRouter picks from whatever is free at the moment. The slug itself
+  // does not rot, which is the whole problem with naming a model, so it goes first.
+  'openrouter/free',
+  // Concrete backups, checked against openrouter.ai/api/v1/models on 2026-09-19. These will go
+  // stale eventually — the router above is what is meant to carry it when they do.
+  'deepseek/deepseek-v4-flash-0731:free',
+  'google/gemma-4-31b-it:free',
+  'qwen/qwen3.8-27b:free',
+  'z-ai/glm-5.2:free',
 ]
 
 /** Reasons to try the next candidate rather than give up: this model, not this key or this quota. */
@@ -156,10 +160,14 @@ export default async function handler(req: Request): Promise<Response> {
 
   let status = 0
   let detail = ''
+  // Naming what was actually attempted settles a question a status code cannot: whether the
+  // deployment is running the model list you think it is.
+  const tried: string[] = []
 
   try {
     // One candidate on Anthropic, and on OpenRouter as many as it takes to find one still free.
     for (const model of provider.models) {
+      tried.push(model)
       const upstream = await fetch(openrouter ? OPENROUTER_ENDPOINT : ANTHROPIC_ENDPOINT, {
         method: 'POST',
         headers: openrouter
@@ -246,7 +254,7 @@ export default async function handler(req: Request): Promise<Response> {
       return json({ ...parsed, model }, 200)
     }
 
-    return json({ error: 'upstream', status, detail }, 502)
+    return json({ error: 'upstream', status, detail, tried }, 502)
   } catch {
     return json({ error: 'upstream' }, 502)
   }

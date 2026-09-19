@@ -215,7 +215,8 @@ async function run() {
   check('openrouter endpoint is used', o?.url === 'https://openrouter.ai/api/v1/chat/completions', o?.url)
   check('key travels as a bearer token', o?.headers.authorization === 'Bearer or-test-key', o?.headers)
   check('no anthropic headers leak across', o?.headers['x-api-key'] === undefined && o?.headers['anthropic-version'] === undefined, o?.headers)
-  check('a free model is the default', String(o?.body.model).endsWith(':free'), o?.body.model)
+  const isFree = (m: unknown) => String(m).endsWith(':free') || String(m) === 'openrouter/free'
+  check('a free model is the default', isFree(o?.body.model), o?.body.model)
 
   const orMessages = o?.body.messages as { role: string; content: string }[]
   check('the prompt is a system turn', orMessages?.[0]?.role === 'system' && orMessages[0].content.includes('Never hand over the finished project'), orMessages?.[0]?.role)
@@ -237,7 +238,7 @@ async function run() {
   check('a retired free model falls through to the next', res.status === 200, { status: res.status, out })
   check('it took exactly three attempts', calls.length === 3, calls.length)
   check('each attempt asked for a different model', new Set(calls.map((x) => x.body.model)).size === 3, calls.map((x) => x.body.model))
-  check('the answering model is named', String(out.model).endsWith(':free'), out.model)
+  check('the answering model is named', isFree(out.model), out.model)
 
   // Every candidate gone: the last reason is what the mentor reports.
   stubSequence([WENT_PAID])
@@ -246,6 +247,9 @@ async function run() {
   check('all candidates exhausted is a 502', res.status === 502, res.status)
   check('the reason survives the whole loop', String(out.detail).includes('unavailable for free'), out)
   check('every candidate was tried', calls.length >= 5, calls.length)
+  // Which ids were attempted settles whether a deployment runs the list you think it does.
+  check('the attempted models are reported', Array.isArray(out.tried) && (out.tried as string[]).length === calls.length, out.tried)
+  check('every reported id is a free one', (out.tried as string[]).every(isFree), out.tried)
 
   // A bad key would fail identically on all of them, so it must stop at the first.
   stubSequence([{ status: 401, raw: { error: { message: 'No auth credentials found' } } }])

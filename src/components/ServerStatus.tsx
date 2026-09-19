@@ -74,14 +74,15 @@ async function liveTest(): Promise<string> {
     })
     const body = await res.text()
     if (!body.trim().startsWith('{')) return t('the_function_is_not_deployed_check_api_routes')
-    const data = JSON.parse(body) as { text?: string; error?: string; status?: number; detail?: string; model?: string }
+    const data = JSON.parse(body) as { text?: string; error?: string; status?: number; detail?: string; model?: string; tried?: string[] }
     // Naming the model that answered matters when the list is tried in order: the one that worked
     // is not necessarily the one the health check reported as first.
     if (res.ok && data.text) return data.model ? t('live_ok_model', { model: data.model, text: data.text.slice(0, 70) }) : t('live_ok', { text: data.text.slice(0, 90) })
     if (res.status === 501) return t('set_key_in_vercel_then_redeploy', { key: 'ANTHROPIC_API_KEY' })
     // A 400 covers both an empty wallet and a malformed request, so the message decides, not the code.
     // A retired free model id is OpenRouter's likeliest failure and no redeploy will fix it.
-    if (/no endpoints|not a valid model|model not found/i.test(data.detail ?? '')) return t('live_bad_model', { detail: data.detail ?? '' })
+    if (/no endpoints|not a valid model|model not found|unavailable for free/i.test(data.detail ?? ''))
+      return t('live_bad_model', { detail: data.detail ?? '' }) + (data.tried?.length ? ' ' + t('live_tried', { models: data.tried.join(', ') }) : '')
     if (/free-models-per|rate limit/i.test(data.detail ?? '')) return t('live_rate_limited')
     if (/credit balance/i.test(data.detail ?? '')) return t('live_no_credit')
     if (/workspace/i.test(data.detail ?? '')) {
